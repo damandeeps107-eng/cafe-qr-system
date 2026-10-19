@@ -570,23 +570,63 @@
         <div class="recent-activity-card">
           <div class="card-header-row">
             <div>
-              <h3 class="card-title">Restaurant & Audio Configuration</h3>
+              <h3 class="card-title">Railway Style Hindi Announcement & Audio Configuration</h3>
               <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
-                Manage voice announcements, audio chimes, and live table capacity.
+                Inspired by Indian Railway Station announcements with Ding-Dong chime & automatic double repetition.
               </p>
             </div>
+            <button onclick="testVoiceAnnouncement()" class="btn-kds-primary" style="padding: 8px 16px;">
+              <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
+              <span>Test Double Announcement</span>
+            </button>
           </div>
-          <div style="padding: 24px; max-width: 640px; display: flex; flex-direction: column; gap: 20px;">
+          <div style="padding: 24px; max-width: 680px; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- Voice Engine Selector -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
               <div>
-                <div style="font-size: 14px; font-weight: 700; color: #171717;">Hindi Voice Announcements</div>
-                <div style="font-size: 12px; color: #737373;">Speaks order tickets aloud when customers place orders</div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Hindi Voice Engine</div>
+                <div style="font-size: 12px; color: #737373;">Auto-detects natural female Hindi neural voices (Google हिन्दी, Swara, Lekha)</div>
               </div>
-              <button onclick="testHindiVoice()" class="btn-kds-primary" style="padding: 8px 16px;">
-                <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
-                <span>Test Voice Alert</span>
-              </button>
+              <select id="posVoiceSelect" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #D4D4D4; font-size: 13px; font-weight: 600; max-width: 260px; background: #FAFAFA; cursor: pointer;">
+                <option value="">Auto-Detect (Google हिन्दी / Neural)</option>
+              </select>
             </div>
+
+            <!-- Double Repetition Mode -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Automatic Double Announcement</div>
+                <div style="font-size: 12px; color: #737373;">Announces order once, waits 2 seconds, and repeats completely</div>
+              </div>
+              <span style="font-size: 12px; font-weight: 700; color: #16A36A; background: rgba(22, 163, 106, 0.1); padding: 4px 10px; border-radius: 12px;">✓ Enabled (2x Repeat)</span>
+            </div>
+
+            <!-- Speaking Speed (Cadence) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Announcement Speed</div>
+                <div style="font-size: 12px; color: #737373;">Slightly slower pace for crystal-clear station public address style</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" id="posSpeedRange" min="0.75" max="1.10" step="0.02" value="0.88" style="accent-color: #16A36A; cursor: pointer; width: 120px;">
+                <span id="speedValText" style="font-size: 13px; font-weight: 700; color: #171717; min-width: 45px;">0.88x</span>
+              </div>
+            </div>
+
+            <!-- Volume Level -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Announcement Volume</div>
+                <div style="font-size: 12px; color: #737373;">Optimized for laptop and external restaurant speakers</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" id="posVolumeRange" min="0.5" max="1.0" step="0.05" value="1.0" style="accent-color: #16A36A; cursor: pointer; width: 120px;">
+                <span id="volumeValText" style="font-size: 13px; font-weight: 700; color: #171717; min-width: 45px;">100%</span>
+              </div>
+            </div>
+
+            <!-- Active Table Count -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
               <div>
                 <div style="font-size: 14px; font-weight: 700; color: #171717;">Active Table Count</div>
@@ -594,6 +634,8 @@
               </div>
               <span style="font-weight: 800; font-size: 14px; background: #FAFAFA; border: 1px solid #EAEAEA; padding: 6px 14px; border-radius: 6px;">12 Tables</span>
             </div>
+
+            <!-- Real-time Sync Engine -->
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <div style="font-size: 14px; font-weight: 700; color: #171717;">Real-Time Sync Engine</div>

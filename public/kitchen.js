@@ -23,8 +23,12 @@ let manualOccupiedTables = new Set();
 let baseUrl = window.location.origin;
 
 // -----------------------------------------------------------------------------
-// 1. PROFESSIONAL RESTAURANT POS BELL CHIME & NATURAL FEMALE VOICE ENGINE
+// 1. PROFESSIONAL INDIAN RAILWAY STYLE HINDI DOUBLE ANNOUNCEMENT ENGINE
 // -----------------------------------------------------------------------------
+let orderAnnouncementQueue = [];
+let isAnnouncing = false;
+let announcedOrderIds = new Set(); // Tracks unique order IDs to prevent duplicates
+
 function initAudio() {
   if (!audioContext) {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -41,74 +45,213 @@ function initAudio() {
 }
 
 /**
- * Modern 3-Tone Restaurant POS Chime (Harmonic Acoustic Chime)
- * Note 1: C6 (1046.5 Hz) -> Note 2: E6 (1318.5 Hz) -> Note 3: G6 (1567.98 Hz)
+ * Signature Indian Railway Station 2-Tone Melodic Chime (Ding-Dong)
+ * Tone 1 (Ding): High pitch bell ~740 Hz with 1480 Hz overtone
+ * Tone 2 (Dong): Resonant low bell ~554 Hz with 1108 Hz overtone
  */
-function playPosChime() {
+function playRailwayChime() {
   if (isMuted) return Promise.resolve();
   try {
     initAudio();
     if (!audioContext) return Promise.resolve();
     const now = audioContext.currentTime;
 
-    // Note 1: C6 (1046.5 Hz) - bright entrance
+    // --- TONE 1: "DING" (740 Hz) ---
     const osc1 = audioContext.createOscillator();
     const gain1 = audioContext.createGain();
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(1046.5, now);
-    gain1.gain.setValueAtTime(0.38, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc1.frequency.setValueAtTime(740, now);
+    gain1.gain.setValueAtTime(0.55, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
     osc1.connect(gain1);
     gain1.connect(audioContext.destination);
     osc1.start(now);
-    osc1.stop(now + 0.3);
+    osc1.stop(now + 0.35);
 
-    // Note 2: E6 (1318.5 Hz) - warm major harmonic
+    // Overtone 1
+    const osc1Over = audioContext.createOscillator();
+    const gain1Over = audioContext.createGain();
+    osc1Over.type = 'triangle';
+    osc1Over.frequency.setValueAtTime(1480, now);
+    gain1Over.gain.setValueAtTime(0.18, now);
+    gain1Over.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    osc1Over.connect(gain1Over);
+    gain1Over.connect(audioContext.destination);
+    osc1Over.start(now);
+    osc1Over.stop(now + 0.28);
+
+    // --- TONE 2: "DONG" (554.37 Hz) ---
     const osc2 = audioContext.createOscillator();
     const gain2 = audioContext.createGain();
     osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1318.5, now + 0.09);
-    gain2.gain.setValueAtTime(0.42, now + 0.09);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+    osc2.frequency.setValueAtTime(554.37, now + 0.28);
+    gain2.gain.setValueAtTime(0.60, now + 0.28);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.95);
     osc2.connect(gain2);
     gain2.connect(audioContext.destination);
-    osc2.start(now + 0.09);
-    osc2.stop(now + 0.42);
+    osc2.start(now + 0.28);
+    osc2.stop(now + 0.95);
 
-    // Note 3: G6 (1567.98 Hz) - bell resolution with extended acoustic decay
-    const osc3 = audioContext.createOscillator();
-    const gain3 = audioContext.createGain();
-    osc3.type = 'triangle';
-    osc3.frequency.setValueAtTime(1567.98, now + 0.18);
-    gain3.gain.setValueAtTime(0.48, now + 0.18);
-    gain3.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
-    osc3.connect(gain3);
-    gain3.connect(audioContext.destination);
-    osc3.start(now + 0.18);
-    osc3.stop(now + 0.85);
+    // Overtone 2
+    const osc2Over = audioContext.createOscillator();
+    const gain2Over = audioContext.createGain();
+    osc2Over.type = 'triangle';
+    osc2Over.frequency.setValueAtTime(1108.74, now + 0.28);
+    gain2Over.gain.setValueAtTime(0.20, now + 0.28);
+    gain2Over.gain.exponentialRampToValueAtTime(0.0001, now + 0.70);
+    osc2Over.connect(gain2Over);
+    gain2Over.connect(audioContext.destination);
+    osc2Over.start(now + 0.28);
+    osc2Over.stop(now + 0.70);
 
-    // Subtle overtone (3135 Hz) for crispness
-    const oscOver = audioContext.createOscillator();
-    const gainOver = audioContext.createGain();
-    oscOver.type = 'sine';
-    oscOver.frequency.setValueAtTime(3135.96, now + 0.18);
-    gainOver.gain.setValueAtTime(0.12, now + 0.18);
-    gainOver.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
-    oscOver.connect(gainOver);
-    gainOver.connect(audioContext.destination);
-    oscOver.start(now + 0.18);
-    oscOver.stop(now + 0.55);
-
-    return new Promise(resolve => setTimeout(resolve, 650));
+    return new Promise(resolve => setTimeout(resolve, 950));
   } catch (e) {
-    console.warn('POS Chime playback issue:', e);
+    console.warn('Railway chime playback issue:', e);
     return Promise.resolve();
   }
 }
 
+// Backward-compatibility alias
+const playPosChime = playRailwayChime;
+
+// -----------------------------------------------------------------------------
+// HINDI NATURAL PRONUNCIATION & NUMBER NORMALIZATION
+// -----------------------------------------------------------------------------
+const HINDI_NUMBER_WORDS = {
+  0: 'शून्य',
+  1: 'एक', 2: 'दो', 3: 'तीन', 4: 'चार', 5: 'पाँच',
+  6: 'छह', 7: 'सात', 8: 'आठ', 9: 'नौ', 10: 'दस',
+  11: 'ग्यारह', 12: 'बारह', 13: 'तेरह', 14: 'चौदह', 15: 'पंद्रह',
+  16: 'सोलह', 17: 'सत्रह', 18: 'अठारह', 19: 'उन्नीस', 20: 'बीस',
+  21: 'इक्कीस', 22: 'बाईस', 23: 'तेईस', 24: 'चौबीस', 25: 'पच्चीस',
+  26: 'छब्बीस', 27: 'सत्ताईस', 28: 'अट्ठाईस', 29: 'उनतीस', 30: 'तीस'
+};
+
+const HINDI_ITEM_DICTIONARY = {
+  'chilli paneer': 'चिली पनीर',
+  'chilli paneer dry': 'चिली पनीर ड्राई',
+  'paneer chilli': 'पनीर चिली',
+  'veg burger': 'वेज बर्गर',
+  'burger': 'बर्गर',
+  'cold coffee': 'कोल्ड कॉफी',
+  'hot coffee': 'हॉट कॉफी',
+  'coffee': 'कॉफी',
+  'masala dosa': 'मसाला डोसा',
+  'plain dosa': 'प्लेन डोसा',
+  'dosa': 'डोसा',
+  'shahi paneer': 'शाही पनीर',
+  'kadai paneer': 'कड़ाही पनीर',
+  'paneer butter masala': 'पनीर बटर मसाला',
+  'butter naan': 'बटर नान',
+  'garlic naan': 'गार्लिक नान',
+  'plain naan': 'प्लेन नान',
+  'naan': 'नान',
+  'tandoori roti': 'तंदूरी रोटी',
+  'roti': 'रोटी',
+  'crispy paneer burger': 'क्रिस्पी पनीर बर्गर',
+  'cheesy veg burger': 'चीज़ी वेज बर्गर',
+  'spicy mexican burger': 'स्पाइसी मैक्सिकन बर्गर',
+  'corn & cheese grilled sandwich': 'कॉर्न और चीज़ ग्रिल्ड सैंडविच',
+  'paneer tikka sandwich': 'पनीर टिक्का सैंडविच',
+  'bombay masala sandwich': 'बॉम्बे मसाला सैंडविच',
+  'sandwich': 'सैंडविच',
+  'peri peri french fries': 'पेरी पेरी फ्रेंच फ्राइज़',
+  'cheesy loaded fries': 'चीज़ी लोडेड फ्राइज़',
+  'french fries': 'फ्रेंच फ्राइज़',
+  'fries': 'फ्राइज़',
+  'margherita pizza': 'मार्गशिता पिज़्ज़ा',
+  'farmhouse veggie pizza': 'फार्महाउस वेज पिज़्ज़ा',
+  'paneer makhani pizza': 'पनीर मखनी पिज़्ज़ा',
+  'pizza': 'पिज़्ज़ा',
+  'white sauce pasta': 'व्हाइट सॉस पास्ता',
+  'red arrabbiata pasta': 'रेड अराबियाता पास्ता',
+  'pasta': 'पास्ता',
+  'choco lava cake': 'चोको लावा केक',
+  'hot choco lava cake': 'चोको लावा केक',
+  'sizzling brownie': 'सिज़लिंग ब्राउनी',
+  'brownie': 'ब्राउनी',
+  'vanilla ice cream': 'वैनिला आइसक्रीम',
+  'ice cream': 'आइसक्रीम',
+  'masala chai': 'मसाला चाय',
+  'ginger tea': 'अदरक वाली चाय',
+  'chai': 'चाय',
+  'tea': 'चाय',
+  'fresh lime soda': 'फ्रेश लाइम सोडा',
+  'mojito': 'मोहितो',
+  'virgin mojito': 'वर्जिन मोहितो',
+  'lassi': 'लस्सी',
+  'sweet lassi': 'मीठी लस्सी',
+  'mango shake': 'मैंगो शेक',
+  'chocolate shake': 'चॉकलेट शेक'
+};
+
+function getHindiNumber(num) {
+  const n = parseInt(num, 10);
+  return HINDI_NUMBER_WORDS[n] || String(num);
+}
+
+function getHindiItemName(item) {
+  if (item.nameHindi && item.nameHindi.trim()) {
+    return item.nameHindi.trim();
+  }
+  const clean = (item.name || '').replace(/\(.*\)/g, '').trim().toLowerCase();
+  if (HINDI_ITEM_DICTIONARY[clean]) {
+    return HINDI_ITEM_DICTIONARY[clean];
+  }
+  for (const [key, val] of Object.entries(HINDI_ITEM_DICTIONARY)) {
+    if (clean === key || clean.includes(key)) {
+      return val;
+    }
+  }
+  return item.name || '';
+}
+
+function buildHindiItemsPhrase(items) {
+  if (!items || items.length === 0) return '';
+  const itemClauses = items.map(item => {
+    const qtyHindi = getHindiNumber(item.qty || 1);
+    const nameHindi = getHindiItemName(item);
+    return `${qtyHindi} ${nameHindi}`;
+  });
+
+  if (itemClauses.length === 1) {
+    return itemClauses[0];
+  }
+  if (itemClauses.length === 2) {
+    return `${itemClauses[0]} और ${itemClauses[1]}`;
+  }
+  const last = itemClauses.pop();
+  return `${itemClauses.join(', ')} और ${last}`;
+}
+
 /**
- * Intelligent Natural Female Indian English Voice Selector
+ * Builds the exact Indian Railway Station announcement format:
+ * First announcement:
+ * "कृपया ध्यान दें! टेबल नंबर पाँच से नया ऑर्डर प्राप्त हुआ है। दो चिली पनीर, एक वेज बर्गर और एक कोल्ड कॉफी।"
+ * Second announcement:
+ * "दोबारा सूचित किया जाता है। टेबल नंबर पाँच से नया ऑर्डर प्राप्त हुआ है। दो चिली पनीर, एक वेज बर्गर और एक कोल्ड कॉफी।"
  */
+function buildRailwayHindiAnnouncements(order) {
+  const tableHindi = getHindiNumber(order.tableNo);
+  const itemsPhrase = buildHindiItemsPhrase(order.items);
+
+  let firstAnnouncement = '';
+  let secondAnnouncement = '';
+
+  if (itemsPhrase) {
+    firstAnnouncement = `कृपया ध्यान दें! टेबल नंबर ${tableHindi} से नया ऑर्डर प्राप्त हुआ है। ${itemsPhrase}।`;
+    secondAnnouncement = `दोबारा सूचित किया जाता है। टेबल नंबर ${tableHindi} से नया ऑर्डर प्राप्त हुआ है। ${itemsPhrase}।`;
+  } else {
+    firstAnnouncement = `कृपया ध्यान दें! टेबल नंबर ${tableHindi} से नया ऑर्डर प्राप्त हुआ है।`;
+    secondAnnouncement = `दोबारा सूचित किया जाता है। टेबल नंबर ${tableHindi} से नया ऑर्डर प्राप्त हुआ है।`;
+  }
+
+  return { firstAnnouncement, secondAnnouncement };
+}
+
+// -----------------------------------------------------------------------------
+// INTELLIGENT HINDI NEURAL FEMALE VOICE SELECTION
+// -----------------------------------------------------------------------------
 function loadVoices() {
   if (!('speechSynthesis' in window)) return;
   availableVoices = window.speechSynthesis.getVoices();
@@ -120,7 +263,7 @@ if ('speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-function getBestNaturalFemaleVoice() {
+function getBestHindiFemaleVoice() {
   if (!availableVoices || availableVoices.length === 0) {
     if ('speechSynthesis' in window) {
       availableVoices = window.speechSynthesis.getVoices();
@@ -136,33 +279,35 @@ function getBestNaturalFemaleVoice() {
 
   if (!availableVoices || availableVoices.length === 0) return null;
 
-  // 2. Score voices according to natural Indian English female criteria
-  function scoreVoice(voice) {
-    const name = (voice.name || '').toLowerCase();
-    const lang = (voice.lang || '').toLowerCase().replace(/_/g, '-');
+  // 2. Score voices according to natural Hindi female neural criteria
+  function scoreVoice(v) {
+    const name = (v.name || '').toLowerCase();
+    const lang = (v.lang || '').toLowerCase().replace(/_/g, '-');
     let score = 0;
 
-    const isIndian = lang.includes('en-in') || lang.includes('hi-in');
-    const isFemale = name.includes('female') || name.includes('tara') || name.includes('heera') ||
-                     name.includes('neerja') || name.includes('veena') || name.includes('kajal') ||
-                     name.includes('raveena') || name.includes('lekha') || name.includes('siri') ||
-                     name.includes('samantha') || name.includes('karen') || name.includes('victoria') ||
-                     name.includes('zira') || name.includes('jenny') || name.includes('aria') ||
-                     name.includes('priya') || name.includes('swara') || name.includes('pooja');
+    const isExplicitHindi = lang.includes('hi') || name.includes('hindi') || name.includes('हिन्दी');
+    const isIndian = lang.includes('in') || name.includes('india');
+
+    const isFemale = name.includes('female') || name.includes('swara') || name.includes('lekha') ||
+                     name.includes('kalpana') || name.includes('neerja') || name.includes('veena') ||
+                     name.includes('kajal') || name.includes('tara') || name.includes('heera') ||
+                     name.includes('priya') || name.includes('pooja') || name.includes('zira');
 
     const isNatural = name.includes('natural') || name.includes('online') || name.includes('neural') || name.includes('google');
 
-    // Tier 1: Natural Female Indian English (e.g., Heera Natural, Tara, Neerja, Google Indian English Female)
-    if (isIndian && isFemale && isNatural) score += 1000;
+    // Priority 1: Hindi Female Natural / Online (Google हिन्दी, Microsoft Swara Online Natural, Lekha)
+    if (isExplicitHindi && isFemale && isNatural) score += 3000;
+    else if (isExplicitHindi && isFemale) score += 2500;
+    else if (isExplicitHindi && isNatural) score += 2000;
+    else if (isExplicitHindi) score += 1800;
+
+    // Priority 2: Indian English / Multilingual Female (Tara, Neerja, Veena, Heera)
+    else if (isIndian && isFemale && isNatural) score += 1000;
     else if (isIndian && isFemale) score += 800;
-    else if (isIndian) score += 500;
+    else if (isIndian) score += 600;
 
-    // Tier 2: Natural Female English (e.g., Google UK English Female, Jenny, Samantha)
-    if (!isIndian && isFemale && isNatural) score += 400;
-    else if (!isIndian && isFemale) score += 300;
-
-    // Tier 3: Any English
-    if (lang.startsWith('en')) score += 100;
+    // Priority 3: Other Female voices
+    else if (isFemale) score += 200;
 
     return score;
   }
@@ -176,21 +321,22 @@ function populateVoiceSelectDropdown() {
   if (!select) return;
 
   select.innerHTML = '';
-  const best = getBestNaturalFemaleVoice();
+  const best = getBestHindiFemaleVoice();
   const savedURI = localStorage.getItem('pos_selected_voice_uri');
 
   // Option: Auto-Detect
   const autoOpt = document.createElement('option');
   autoOpt.value = '';
-  autoOpt.innerText = `Auto-Detect (Recommended: ${best ? best.name : 'Natural Female'})`;
+  autoOpt.innerText = `Auto-Detect (Recommended: ${best ? best.name : 'Natural Hindi Female'})`;
   if (!savedURI) autoOpt.selected = true;
   select.appendChild(autoOpt);
 
   availableVoices.forEach(v => {
     const opt = document.createElement('option');
     opt.value = v.voiceURI || v.name;
-    const isInd = v.lang.toLowerCase().includes('in');
-    opt.innerText = `${v.name} (${v.lang})${isInd ? ' 🇮🇳' : ''}`;
+    const isHi = (v.lang || '').toLowerCase().includes('hi') || (v.name || '').includes('हिन्दी');
+    const isInd = (v.lang || '').toLowerCase().includes('in');
+    opt.innerText = `${v.name} (${v.lang})${isHi ? ' 🇮🇳 Hindi' : (isInd ? ' 🇮🇳' : '')}`;
     if (savedURI && (v.voiceURI === savedURI || v.name === savedURI)) {
       opt.selected = true;
     }
@@ -199,130 +345,151 @@ function populateVoiceSelectDropdown() {
 }
 
 /**
- * Text Transformation Helpers for Natural Speaking Delivery
+ * Speaks Hindi Devanagari text with Station Announcement Cadence & Loud Audio
  */
-function numberToWord(num) {
-  const map = {
-    1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
-    6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
-    11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen',
-    15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen',
-    19: 'nineteen', 20: 'twenty'
-  };
-  return map[num] || num.toString();
-}
+function speakHindiUtterance(text) {
+  return new Promise((resolve) => {
+    if (!('speechSynthesis' in window)) {
+      resolve();
+      return;
+    }
 
-function capitalize(text) {
-  if (!text) return '';
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
+    window.speechSynthesis.cancel();
 
-/**
- * Builds the exact reference announcement format:
- * "New order received! Table number five. Two Chilli Paneer, one Veg Burger, and one Cold Coffee."
- */
-function buildPosOrderAnnouncement(order) {
-  const tableWord = numberToWord(order.tableNo);
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voice = getBestHindiFemaleVoice();
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang || 'hi-IN';
+    } else {
+      utterance.lang = 'hi-IN';
+    }
 
-  if (!order.items || order.items.length === 0) {
-    return `New order received! Table number ${tableWord}.`;
-  }
+    // Professional railway public announcement cadence: slightly slower than normal conversation (0.88x)
+    const rate = parseFloat(localStorage.getItem('pos_voice_rate') || '0.88');
+    const pitch = parseFloat(localStorage.getItem('pos_voice_pitch') || '1.0');
+    const volume = parseFloat(localStorage.getItem('pos_voice_volume') || '1.0');
 
-  const itemsList = order.items.map(item => {
-    const qtyWord = numberToWord(item.qty);
-    const cleanName = (item.name || '').replace(/\(.*\)/g, '').trim();
-    return `${qtyWord} ${cleanName}`;
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+    utterance.volume = volume;
+
+    let safetyTimeout = null;
+    let heartbeatInterval = null;
+
+    const cleanup = () => {
+      if (safetyTimeout) clearTimeout(safetyTimeout);
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      resolve();
+    };
+
+    utterance.onend = cleanup;
+    utterance.onerror = (e) => {
+      console.warn('Speech synthesis utterance note:', e);
+      cleanup();
+    };
+
+    // Chrome garbage-collection speech fix: keep speech synthesis alive on long utterances
+    heartbeatInterval = setInterval(() => {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 5000);
+
+    // 40-second safety timeout
+    safetyTimeout = setTimeout(cleanup, 40000);
+
+    window.speechSynthesis.speak(utterance);
   });
-
-  let itemsPhrase = '';
-  if (itemsList.length === 1) {
-    itemsPhrase = capitalize(itemsList[0]);
-  } else if (itemsList.length === 2) {
-    itemsPhrase = `${capitalize(itemsList[0])} and ${itemsList[1]}`;
-  } else {
-    const lastItem = itemsList.pop();
-    itemsPhrase = `${capitalize(itemsList.join(', '))}, and ${lastItem}`;
-  }
-
-  return `New order received! Table number ${tableWord}. ${itemsPhrase}.`;
 }
 
 /**
- * Sequential Speech Queue System to avoid overlapping announcements
+ * AUTOMATIC DOUBLE ANNOUNCEMENT SEQUENCE:
+ * 1. Play Ding-Dong notification chime
+ * 2. Wait 0.5 seconds
+ * 3. Start first Hindi voice announcement
+ * 4. Wait 2 seconds after first announcement finishes
+ * 5. Repeat complete announcement a second time
+ * 6. Stop automatically after second announcement
+ */
+async function announceOrderWithDoubleRepetition(order) {
+  const { firstAnnouncement, secondAnnouncement } = buildRailwayHindiAnnouncements(order);
+
+  // Step 2: Play short, clear notification chime
+  await playRailwayChime();
+
+  // Step 3: Wait 0.5 seconds
+  await new Promise(r => setTimeout(r, 500));
+
+  // Step 4: First Hindi voice announcement
+  await speakHindiUtterance(firstAnnouncement);
+
+  // Step 5: Wait 2 seconds after first announcement finishes
+  await new Promise(r => setTimeout(r, 2000));
+
+  // Step 6: Repeat complete announcement second time
+  await speakHindiUtterance(secondAnnouncement);
+
+  // Step 7: Stop automatically after second announcement
+}
+
+/**
+ * Sequential Order Announcement Queue (Zero Overlap, Guaranteed Double Repetition)
  */
 function announceNewOrder(order) {
+  if (!order || !order.id) return;
+  if (announcedOrderIds.has(order.id)) return; // Prevent duplicate
+  announcedOrderIds.add(order.id);
+
   if (isMuted) return;
 
-  const announcementText = buildPosOrderAnnouncement(order);
-  speechQueue.push(announcementText);
-  processSpeechQueue();
+  orderAnnouncementQueue.push(order);
+  processOrderAnnouncementQueue();
 }
 
-async function processSpeechQueue() {
-  if (isSpeaking || speechQueue.length === 0) return;
-  if (!('speechSynthesis' in window)) return;
+async function processOrderAnnouncementQueue() {
+  if (isAnnouncing || orderAnnouncementQueue.length === 0) return;
+  if (isMuted) return;
 
-  isSpeaking = true;
-  const textToSpeak = speechQueue.shift();
+  isAnnouncing = true;
+  const currentOrder = orderAnnouncementQueue.shift();
 
-  // 1. Play pleasant POS notification chime
-  await playPosChime();
-
-  // 2. Breath pause between chime and spoken words
-  await new Promise(r => setTimeout(r, 120));
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(textToSpeak);
-  const voice = getBestNaturalFemaleVoice();
-  if (voice) {
-    utterance.voice = voice;
-    utterance.lang = voice.lang || 'en-IN';
-  } else {
-    utterance.lang = 'en-IN';
+  try {
+    await announceOrderWithDoubleRepetition(currentOrder);
+  } catch (err) {
+    console.error('Error during double order announcement:', err);
+  } finally {
+    isAnnouncing = false;
+    // Sequential spacing before starting next order in queue
+    if (orderAnnouncementQueue.length > 0) {
+      setTimeout(processOrderAnnouncementQueue, 800);
+    }
   }
-
-  // Smooth, slightly energetic POS delivery tempo
-  const speed = parseFloat(localStorage.getItem('pos_voice_rate') || '1.02');
-  const pitch = parseFloat(localStorage.getItem('pos_voice_pitch') || '1.08');
-  utterance.rate = speed;
-  utterance.pitch = pitch;
-  utterance.volume = 1.0;
-
-  utterance.onend = () => {
-    isSpeaking = false;
-    setTimeout(processSpeechQueue, 350);
-  };
-
-  utterance.onerror = (e) => {
-    console.warn('Speech synthesis utterance issue:', e);
-    isSpeaking = false;
-    setTimeout(processSpeechQueue, 350);
-  };
-
-  window.speechSynthesis.speak(utterance);
 }
 
 /**
- * Test Announcement matching the exact reference requirement
+ * Test Announcement matching the exact reference requirement:
+ * Table 5: 2 Chilli Paneer, 1 Veg Burger, 1 Cold Coffee (Repeated Twice)
  */
 function testVoiceAnnouncement() {
   initAudio();
   const sampleOrder = {
+    id: `TEST-${Date.now()}`,
     tableNo: 5,
     items: [
-      { qty: 2, name: 'Chilli Paneer' },
-      { qty: 1, name: 'Veg Burger' },
-      { qty: 1, name: 'Cold Coffee' }
+      { qty: 2, name: 'Chilli Paneer', nameHindi: 'चिली पनीर' },
+      { qty: 1, name: 'Veg Burger', nameHindi: 'वेज बर्गर' },
+      { qty: 1, name: 'Cold Coffee', nameHindi: 'कोल्ड कॉफी' }
     ]
   };
 
-  const announcement = buildPosOrderAnnouncement(sampleOrder);
-  speechQueue.push(announcement);
-  processSpeechQueue();
-
-  showToast('Playing POS Voice Announcement...', '🎙️');
+  showToast('Playing Indian Railway Style Double Announcement...', '🎙️');
+  orderAnnouncementQueue.push(sampleOrder);
+  processOrderAnnouncementQueue();
 }
+
+const testHindiVoice = testVoiceAnnouncement;
 
 // -----------------------------------------------------------------------------
 // 2. UNIVERSAL QR CODE RENDERER (Supports Canvas, Div & Image Fallback)
@@ -434,6 +601,7 @@ async function initServerData() {
     }
 
     knownOrderIds = new Set(orders.map(o => o.id));
+    announcedOrderIds = new Set(orders.map(o => o.id));
 
     renderDashboardOverview();
     renderKdsTickets();
@@ -842,7 +1010,10 @@ async function updateOrderStatus(orderId, newStatus) {
 function replayOrderVoice(orderId) {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
-  announceNewOrder(order);
+  initAudio();
+  showToast(`Replaying Railway Announcement for Table ${order.tableNo}...`, '🎙️');
+  orderAnnouncementQueue.push(order);
+  processOrderAnnouncementQueue();
 }
 
 // -----------------------------------------------------------------------------
@@ -1239,11 +1410,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const speedRange = document.getElementById('posSpeedRange');
   const speedText = document.getElementById('speedValText');
   if (speedRange) {
-    speedRange.value = localStorage.getItem('pos_voice_rate') || '1.02';
+    speedRange.value = localStorage.getItem('pos_voice_rate') || '0.88';
     if (speedText) speedText.innerText = `${speedRange.value}x`;
     speedRange.addEventListener('input', (e) => {
       localStorage.setItem('pos_voice_rate', e.target.value);
       if (speedText) speedText.innerText = `${e.target.value}x`;
+    });
+  }
+
+  const volumeRange = document.getElementById('posVolumeRange');
+  const volumeText = document.getElementById('volumeValText');
+  if (volumeRange) {
+    volumeRange.value = localStorage.getItem('pos_voice_volume') || '1.0';
+    if (volumeText) volumeText.innerText = `${Math.round(parseFloat(volumeRange.value) * 100)}%`;
+    volumeRange.addEventListener('input', (e) => {
+      localStorage.setItem('pos_voice_volume', e.target.value);
+      if (volumeText) volumeText.innerText = `${Math.round(parseFloat(e.target.value) * 100)}%`;
     });
   }
 
