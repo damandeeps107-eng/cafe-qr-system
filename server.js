@@ -323,17 +323,14 @@ app.get('/order', (req, res) => {
   res.sendFile('order.html', { root: PUBLIC_DIR });
 });
 
-// 2. Main Root Domain: If ?table= query present (e.g. from table QR code), send Customer Menu; otherwise send Restaurant Dashboard
+// 2. Main Root Domain: Public Customer Menu (Safe for Google & Domain Visitors)
 app.get('/', (req, res) => {
-  if (req.query.table) {
-    return res.sendFile('order.html', { root: PUBLIC_DIR });
-  }
-  res.sendFile('index.html', { root: PUBLIC_DIR });
+  res.sendFile('order.html', { root: PUBLIC_DIR });
 });
 
-// 3. Restaurant / Kitchen Live Dashboard with Voice Alerts
+// 3. Restaurant / Kitchen Live Dashboard with Voice Alerts & PIN Lock
 app.get(['/kitchen', '/dashboard', '/admin'], (req, res) => {
-  res.sendFile('index.html', { root: PUBLIC_DIR });
+  res.sendFile('kitchen.html', { root: PUBLIC_DIR });
 });
 
 // 4. Separate QR Codes Generator & Table Standees

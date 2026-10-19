@@ -1699,6 +1699,11 @@ window.showToast = showToast;
 window.openNotificationDrawer = openNotificationDrawer;
 window.openOrderDetailsModal = openOrderDetailsModal;
 window.closeOrderDetailsModal = closeOrderDetailsModal;
+window.enterPinDigit = enterPinDigit;
+window.deletePinDigit = deletePinDigit;
+window.clearPin = clearPin;
+window.lockDashboard = lockDashboard;
+window.saveManagerPinFromSettings = saveManagerPinFromSettings;
 
 // -----------------------------------------------------------------------------
 // 12. SOCKET.IO EVENT HANDLERS (Safely bounded)
@@ -1867,4 +1872,145 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.addEventListener('click', initAudio, { once: true });
   document.body.addEventListener('touchstart', initAudio, { once: true });
   document.body.addEventListener('keydown', initAudio, { once: true });
+
+  // Initialize Manager PIN Protection Lock
+  initDashboardPinProtection();
 });
+
+// -----------------------------------------------------------------------------
+// 14. MANAGER PIN PROTECTION ENGINE (SaaS POS Security)
+// -----------------------------------------------------------------------------
+let currentPinInput = '';
+const DEFAULT_MANAGER_PIN = '1234';
+
+function getManagerPin() {
+  return localStorage.getItem('pos_manager_pin') || DEFAULT_MANAGER_PIN;
+}
+
+function setManagerPin(newPin) {
+  if (/^\d{4}$/.test(newPin)) {
+    localStorage.setItem('pos_manager_pin', newPin);
+    return true;
+  }
+  return false;
+}
+
+function isDashboardAuthenticated() {
+  return sessionStorage.getItem('pos_dashboard_auth') === 'true';
+}
+
+function initDashboardPinProtection() {
+  const overlay = document.getElementById('dashboardPinLockOverlay');
+  if (!overlay) return;
+
+  if (isDashboardAuthenticated()) {
+    overlay.classList.add('unlocked');
+  } else {
+    overlay.classList.remove('unlocked');
+    currentPinInput = '';
+    updatePinDotsUI();
+  }
+
+  // Support hardware keyboard number entry
+  window.addEventListener('keydown', (e) => {
+    if (overlay.classList.contains('unlocked')) return;
+    if (e.key >= '0' && e.key <= '9') {
+      enterPinDigit(e.key);
+    } else if (e.key === 'Backspace') {
+      deletePinDigit();
+    } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
+      clearPin();
+    }
+  });
+
+  const pinInputSettings = document.getElementById('managerPinInput');
+  if (pinInputSettings) {
+    pinInputSettings.value = getManagerPin();
+  }
+}
+
+function updatePinDotsUI() {
+  const dots = document.querySelectorAll('#pinDotsRow .pin-dot');
+  dots.forEach((dot, idx) => {
+    if (idx < currentPinInput.length) {
+      dot.classList.add('filled');
+    } else {
+      dot.classList.remove('filled');
+    }
+  });
+}
+
+function enterPinDigit(digit) {
+  if (currentPinInput.length >= 4) return;
+  currentPinInput += digit;
+  updatePinDotsUI();
+
+  const errEl = document.getElementById('pinErrorMessage');
+  if (errEl) errEl.style.display = 'none';
+
+  if (currentPinInput.length === 4) {
+    setTimeout(verifyPinInput, 150);
+  }
+}
+
+function deletePinDigit() {
+  if (currentPinInput.length > 0) {
+    currentPinInput = currentPinInput.slice(0, -1);
+    updatePinDotsUI();
+  }
+}
+
+function clearPin() {
+  currentPinInput = '';
+  updatePinDotsUI();
+  const errEl = document.getElementById('pinErrorMessage');
+  if (errEl) errEl.style.display = 'none';
+}
+
+function verifyPinInput() {
+  const expected = getManagerPin();
+  if (currentPinInput === expected) {
+    sessionStorage.setItem('pos_dashboard_auth', 'true');
+    const overlay = document.getElementById('dashboardPinLockOverlay');
+    if (overlay) {
+      overlay.classList.add('unlocked');
+    }
+    showToast('Manager Access Granted', '🔓');
+    currentPinInput = '';
+    updatePinDotsUI();
+    initAudio();
+  } else {
+    const errEl = document.getElementById('pinErrorMessage');
+    if (errEl) {
+      errEl.style.display = 'block';
+      errEl.classList.remove('pin-error-text');
+      void errEl.offsetWidth;
+      errEl.classList.add('pin-error-text');
+    }
+    currentPinInput = '';
+    updatePinDotsUI();
+  }
+}
+
+function lockDashboard() {
+  sessionStorage.removeItem('pos_dashboard_auth');
+  currentPinInput = '';
+  updatePinDotsUI();
+  const overlay = document.getElementById('dashboardPinLockOverlay');
+  if (overlay) {
+    overlay.classList.remove('unlocked');
+  }
+  showToast('Dashboard Locked', '🔒');
+}
+
+function saveManagerPinFromSettings() {
+  const input = document.getElementById('managerPinInput');
+  if (!input) return;
+  const val = input.value.trim();
+  if (/^\d{4}$/.test(val)) {
+    setManagerPin(val);
+    showToast(`Manager PIN updated to ${val}`, '🔑');
+  } else {
+    showToast('PIN must be exactly 4 numeric digits', '⚠️');
+  }
+}

@@ -196,6 +196,12 @@
             <span class="notification-dot"></span>
           </button>
 
+          <!-- Lock POS Screen Button -->
+          <button class="header-pill-btn" onclick="lockDashboard()" title="Lock Screen with PIN">
+            <i data-lucide="lock" style="width: 15px; height: 15px; color: #DC2626;"></i>
+            <span>Lock POS</span>
+          </button>
+
           <!-- Settings Icon -->
           <button class="header-icon-btn" id="settingsIconBtn" title="Preferences">
             <i data-lucide="sliders" style="width: 18px; height: 18px;"></i>
@@ -629,6 +635,18 @@
               </div>
             </div>
 
+            <!-- Manager Security PIN -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Manager Security PIN</div>
+                <div style="font-size: 12px; color: #737373;">4-digit PIN required to unlock this dashboard (Default: 1234)</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="password" id="managerPinInput" maxlength="4" placeholder="1234" style="width: 80px; padding: 6px 10px; border-radius: 6px; border: 1px solid #D4D4D4; text-align: center; font-size: 14px; font-weight: 800; letter-spacing: 2px;">
+                <button onclick="saveManagerPinFromSettings()" class="btn-kds-primary" style="padding: 6px 12px; font-size: 12px;">Save PIN</button>
+              </div>
+            </div>
+
             <!-- Active Table Count -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
               <div>
@@ -754,6 +772,49 @@
         <button onclick="closeOrderDetailsModal()" class="btn-kds-primary" style="flex: 1; min-width: 100px; justify-content: center; padding: 10px 14px;">
           <span>Close</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen PIN Lock Screen Overlay -->
+  <div id="dashboardPinLockOverlay" class="pin-lock-overlay">
+    <div class="pin-lock-modal">
+      <div class="pin-brand-header">
+        <div class="pin-brand-icon">☕</div>
+        <h2 class="pin-title">The Royal Cafe</h2>
+        <p class="pin-subtitle">Manager &amp; Kitchen Staff Authorization</p>
+      </div>
+
+      <!-- PIN Visual Dots -->
+      <div class="pin-dots-row" id="pinDotsRow">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+
+      <div id="pinErrorMessage" class="pin-error-text" style="display: none;">
+        Incorrect PIN. Please try again.
+      </div>
+
+      <!-- Keypad -->
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="enterPinDigit('1')">1</button>
+        <button class="pin-key" onclick="enterPinDigit('2')">2</button>
+        <button class="pin-key" onclick="enterPinDigit('3')">3</button>
+        <button class="pin-key" onclick="enterPinDigit('4')">4</button>
+        <button class="pin-key" onclick="enterPinDigit('5')">5</button>
+        <button class="pin-key" onclick="enterPinDigit('6')">6</button>
+        <button class="pin-key" onclick="enterPinDigit('7')">7</button>
+        <button class="pin-key" onclick="enterPinDigit('8')">8</button>
+        <button class="pin-key" onclick="enterPinDigit('9')">9</button>
+        <button class="pin-key pin-key-fn" onclick="clearPin()">C</button>
+        <button class="pin-key" onclick="enterPinDigit('0')">0</button>
+        <button class="pin-key pin-key-fn" onclick="deletePinDigit()">⌫</button>
+      </div>
+
+      <div class="pin-footer-hint">
+        Default Manager PIN is <strong>1234</strong>
       </div>
     </div>
   </div>
