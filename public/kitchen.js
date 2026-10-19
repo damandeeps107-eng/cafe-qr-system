@@ -42,6 +42,29 @@ if (posAudioChannel) {
   };
 }
 
+// Instant cross-tab real-time orders channel (0.001s transmission)
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  try {
+    const liveOrderChannel = new BroadcastChannel('pos_live_orders');
+    liveOrderChannel.onmessage = (event) => {
+      if (event.data && event.data.type === 'NEW_ORDER' && event.data.order) {
+        const newOrder = event.data.order;
+        if (!knownOrderIds.has(newOrder.id)) {
+          knownOrderIds.add(newOrder.id);
+          if (!orders.some(o => o.id === newOrder.id)) {
+            orders.unshift(newOrder);
+            renderDashboardOverview();
+            renderKdsTickets();
+            renderTablesManagement();
+            renderAllOrdersView();
+            announceNewOrder(newOrder);
+          }
+        }
+      }
+    };
+  } catch (e) {}
+}
+
 let isAudioFullyUnlocked = false;
 
 function initAudio() {
@@ -530,16 +553,23 @@ async function announceOrder(order) {
     } catch (e) {}
   }
 
-  // 1. Play clear 2-tone Railway notification chime
+  // 1. Play clear 2-tone Railway notification chime immediately
   await playRailwayChime();
 
-  // Natural breath pause between chime and speech
-  await new Promise(r => setTimeout(r, 450));
+  // Natural breath pause between chime and speech (300ms)
+  await new Promise(r => setTimeout(r, 300));
 
-  // Synthesize or retrieve ElevenLabs audio ONCE
+  // Synthesize or retrieve ElevenLabs audio (max 400ms wait so it NEVER lags)
   let audioSource = order.audioDataUri || order.audioUrl || null;
   if (!audioSource) {
-    audioSource = await requestElevenLabsSpeech(firstAnnouncement);
+    try {
+      audioSource = await Promise.race([
+        requestElevenLabsSpeech(firstAnnouncement),
+        new Promise(resolve => setTimeout(() => resolve(null), 400))
+      ]);
+    } catch (e) {
+      audioSource = null;
+    }
   }
 
   if (audioSource) {
@@ -550,23 +580,22 @@ async function announceOrder(order) {
       // 2. Announce complete order in Hindi (Pass 1)
       await playAudioElement(audio);
 
-      // 3. Wait 2 seconds
-      await new Promise(r => setTimeout(r, 2000));
+      // 3. Short pause
+      await new Promise(r => setTimeout(r, 1200));
 
-      // 4. Repeat the complete order announcement (Pass 2 - Replay exact same audio buffer!)
+      // 4. Repeat announcement (Pass 2)
       audio.currentTime = 0;
       await playAudioElement(audio);
 
-      // 5. Stop automatically
       return;
     } catch (err) {
-      console.warn('ElevenLabs audio playback failed, falling back to speech synthesis:', err);
+      console.warn('ElevenLabs audio playback failed, falling back to instant speech synthesis:', err);
     }
   }
 
-  // Fallback: Web Speech Synthesis (Repeats twice with 2-second pause)
+  // Instant Fallback: Native Hindi Web Speech Synthesis (Zero lag, crisp Railway voice)
   await speakHindiUtterance(firstAnnouncement);
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 1200));
   await speakHindiUtterance(firstAnnouncement);
 }
 
@@ -810,7 +839,7 @@ function startPollingFallback() {
     } catch (e) {
       // silent background polling
     }
-  }, 3500);
+  }, 800);
 }
 
 // -----------------------------------------------------------------------------

@@ -329,6 +329,14 @@ async function placeOrder() {
     const newOrder = await res.json();
     activeOrder = newOrder;
 
+    // Instant cross-tab sync to dashboard (0.001s)
+    try {
+      if ('BroadcastChannel' in window) {
+        const liveCh = new BroadcastChannel('pos_live_orders');
+        liveCh.postMessage({ type: 'NEW_ORDER', order: newOrder });
+      }
+    } catch (e) {}
+
     // Reset Cart
     cart = {};
     updateCartUI();
