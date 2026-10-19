@@ -50,7 +50,7 @@ function createStandeeElement(tableNo) {
   card.id = `standee-table-${tableNo}`;
 
   const tableFormatted = tableNo < 10 ? `0${tableNo}` : tableNo;
-  const targetUrl = `${baseUrl}/?table=${tableNo}`;
+  const targetUrl = `${baseUrl}/order?table=${tableNo}`;
 
   card.innerHTML = `
     <div class="standee-cafe-header">
@@ -90,7 +90,7 @@ function generateQRCodeForTable(tableNo) {
   const canvas = document.getElementById(`qr-canvas-${tableNo}`);
   if (!canvas) return;
 
-  const targetUrl = `${baseUrl}/?table=${tableNo}`;
+  const targetUrl = `${baseUrl}/order?table=${tableNo}`;
 
   if (window.QRCode && typeof QRCode.toCanvas === 'function') {
     QRCode.toCanvas(canvas, targetUrl, {

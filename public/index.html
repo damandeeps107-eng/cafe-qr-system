@@ -2,232 +2,653 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Royal Cafe & Bistro — Dine-In Menu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Royal Cafe — Restaurant Management Dashboard</title>
   
-  <!-- Premium Fonts -->
+  <script>
+    // If table parameter exists (scanned from customer table QR), redirect directly to Customer Menu
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('table')) {
+        window.location.replace('/order' + window.location.search);
+      }
+    })();
+  </script>
+
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/customer.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+  <link rel="stylesheet" href="/kitchen.css">
 </head>
 <body>
 
-  <!-- Top Brand Navigation Header -->
-  <header class="brand-header">
-    <div class="brand-header-inner">
-      <div class="brand-identity">
-        <h1 class="brand-title">The Royal Cafe</h1>
-        <div class="brand-badge-sub">Artisanal Bakery & Bistro</div>
+  <!-- Audio Alerts Banner -->
+  <aside class="audio-banner-ribbon" id="audioBanner" style="display: none;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+      <span><strong>Hindi Voice Alerts:</strong> Click to enable spoken kitchen order announcements.</span>
+    </div>
+    <button class="btn-audio-enable" id="enableAudioBtn">Enable Voice Alerts</button>
+  </aside>
+
+  <!-- -----------------------------------------------------------------------
+       1. EXACT REFERENCE SIDEBAR
+  ------------------------------------------------------------------------ -->
+  <aside class="dashboard-sidebar">
+    <!-- Top Brand Header -->
+    <div class="sidebar-header">
+      <div class="restaurant-logo-box">
+        <i data-lucide="utensils" style="width: 20px; height: 20px;"></i>
       </div>
-      
-      <div class="table-indicator" id="tableBadgeBtn" title="Change Table Number">
-        <span class="table-status-dot"></span>
-        <span class="table-text" id="tableBadgeText">TABLE 02</span>
+      <div class="restaurant-title-wrap">
+        <span class="restaurant-name">The Royal Cafe</span>
+        <span class="restaurant-type">Bistro & Dining</span>
       </div>
     </div>
-  </header>
 
-  <!-- Quick Guest Assistance Bar -->
-  <section class="service-bar">
-    <div class="service-bar-inner">
-      <button class="btn-service" id="callWaterBtn">
-        <span>💧</span> Water
-      </button>
-      <button class="btn-service" id="callWaiterBtn">
-        <span>🛎️</span> Call Waiter
-      </button>
-      <button class="btn-service" id="askBillBtn">
-        <span>🧾</span> Request Bill
-      </button>
-    </div>
-  </section>
-
-  <!-- Active Order Progress Pill (shown when order is placed) -->
-  <div class="live-status-pill">
-    <div class="live-status-card hidden" id="activeOrderBanner">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="pulse-indicator"></span>
-        <div>
-          <div style="font-size: 13px; font-weight: 700;">Order in Progress</div>
-          <div style="font-size: 11px; color: #a1a1aa;" id="bannerStatusText">Kitchen is preparing your order...</div>
+    <!-- Store Selector Section -->
+    <div class="store-selector-container">
+      <div class="store-selector-box" title="Switch Restaurant Branch">
+        <div class="store-info">
+          <i data-lucide="store" class="store-icon"></i>
+          <span>Main Cafe Branch</span>
         </div>
-      </div>
-      <div style="font-size: 12px; font-weight: 700; color: #f4f4f5; display: flex; align-items: center; gap: 4px;">
-        Track <span>→</span>
+        <i data-lucide="chevron-down" class="store-chevron"></i>
       </div>
     </div>
-  </div>
 
-  <!-- Search Input -->
-  <section class="search-wrapper">
-    <div class="search-field">
-      <svg class="search-icon-svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" id="dishSearchInput" placeholder="Search dishes, coffee, sandwiches...">
-    </div>
-  </section>
-
-  <!-- Categories Horizontal Navigation -->
-  <nav class="categories-container" id="categoriesNav">
-    <button class="tab-pill active" data-category="all">All Items</button>
-    <button class="tab-pill" data-category="burgers">Burgers</button>
-    <button class="tab-pill" data-category="sandwiches">Sandwiches</button>
-    <button class="tab-pill" data-category="pizza_fries">Pizza & Sides</button>
-    <button class="tab-pill" data-category="drinks">Coffee & Shakes</button>
-    <button class="tab-pill" data-category="desserts">Desserts</button>
-  </nav>
-
-  <!-- Main Dishes Catalog -->
-  <main class="menu-catalog">
-    <div class="catalog-header">
-      <h2 class="catalog-title" id="categoryHeading">Featured Creations</h2>
-      <span class="catalog-meta" id="itemsCountBadge">14 curated items</span>
-    </div>
-
-    <div class="catalog-grid" id="dishesContainer">
-      <!-- Dish cards dynamically injected via customer.js -->
-    </div>
-  </main>
-
-  <!-- Floating Checkout Dock -->
-  <div class="bottom-cart-dock" id="cartFloatingBar">
-    <div class="cart-dock-info">
-      <div class="cart-dock-badge"><span id="cartTotalQty">0</span> items selected</div>
-      <div class="cart-dock-price" id="cartTotalPrice">₹0</div>
-    </div>
-    <button class="btn-dock-checkout" id="openCartBtn">
-      View Order <span>→</span>
-    </button>
-  </div>
-
-  <!-- Cart & Checkout Modal Bottom Sheet -->
-  <div class="drawer-backdrop" id="cartModalOverlay">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h3 class="drawer-headline">Your Order Summary</h3>
-        <button class="btn-close-drawer" id="closeCartBtn">✕</button>
-      </div>
-
-      <div style="background: var(--bg-muted); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);" id="cartTableIndicator">Table 02</span>
-        <span style="font-size: 11px; font-weight: 600; color: #16a34a; letter-spacing: 0.05em; text-transform: uppercase;">● QR Dine-In Verified</span>
-      </div>
-
-      <!-- Items List -->
-      <div class="order-items-list" id="cartItemsList">
-        <!-- Injected via JS -->
-      </div>
-
-      <!-- Cooking Notes -->
+    <!-- Scrollable Navigation Area -->
+    <div class="sidebar-scroll-area">
+      <!-- Main Menu Section -->
       <div>
-        <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block;">
-          Special Kitchen Instructions (Optional)
-        </label>
-        <input type="text" id="specialNoteInput" class="notes-input-box" placeholder="e.g. Less spicy, crispy bread, no onion, extra cheese...">
+        <div class="nav-section-label">Menu</div>
+        <ul class="nav-links-list">
+          <li>
+            <button class="nav-item-btn active" data-target="dashboard">
+              <div class="nav-item-left">
+                <i data-lucide="layout-grid" class="nav-icon"></i>
+                <span>Dashboard</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="orders">
+              <div class="nav-item-left">
+                <i data-lucide="shopping-bag" class="nav-icon"></i>
+                <span>Orders</span>
+              </div>
+              <span class="nav-badge-pill" id="sidebarOrdersBadge">0</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="tables">
+              <div class="nav-item-left">
+                <i data-lucide="table" class="nav-icon"></i>
+                <span>Tables & QR</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="kitchen">
+              <div class="nav-item-left">
+                <i data-lucide="chef-hat" class="nav-icon"></i>
+                <span>Kitchen Display</span>
+              </div>
+              <span class="nav-badge-pill" id="sidebarKitchenBadge" style="background: rgba(22, 163, 106, 0.15); color: #16A36A;">LIVE</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="menus">
+              <div class="nav-item-left">
+                <i data-lucide="book-open" class="nav-icon"></i>
+                <span>Menus</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="analytics">
+              <div class="nav-item-left">
+                <i data-lucide="bar-chart-3" class="nav-icon"></i>
+                <span>Analytics</span>
+              </div>
+            </button>
+          </li>
+        </ul>
       </div>
 
-      <!-- Bill Breakdown -->
-      <div class="bill-summary-box">
-        <div class="bill-entry">
-          <span>Subtotal</span>
-          <span id="billSubtotal">₹0</span>
-        </div>
-        <div class="bill-entry">
-          <span>Taxes & Service (5%)</span>
-          <span id="billGst">₹0</span>
-        </div>
-        <div class="bill-entry grand-total">
-          <span>Total Payable Amount</span>
-          <span id="billGrandTotal">₹0</span>
-        </div>
+      <!-- Others Section -->
+      <div>
+        <div class="nav-section-label">Others</div>
+        <ul class="nav-links-list">
+          <li>
+            <button class="nav-item-btn" data-target="help">
+              <div class="nav-item-left">
+                <i data-lucide="help-circle" class="nav-icon"></i>
+                <span>Help Center</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="settings">
+              <div class="nav-item-left">
+                <i data-lucide="settings" class="nav-icon"></i>
+                <span>Settings</span>
+              </div>
+            </button>
+          </li>
+        </ul>
       </div>
+    </div>
 
-      <!-- Confirm Order Button -->
-      <button class="btn-confirm-order" id="confirmOrderBtn">
-        Confirm & Send to Kitchen <span>→</span>
-      </button>
+    <!-- Bottom Admin Profile Card -->
+    <div class="sidebar-footer">
+      <div class="admin-profile-card">
+        <div class="profile-avatar-wrap">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Admin Avatar" class="profile-avatar">
+          <div class="profile-details">
+            <span class="profile-name">Alex Morgan</span>
+            <span class="profile-role">Store Manager</span>
+          </div>
+        </div>
+        <button class="profile-action-btn" title="Profile Settings">
+          <i data-lucide="more-vertical" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- -----------------------------------------------------------------------
+       2. MAIN CONTENT AREA & TOP HEADER
+  ------------------------------------------------------------------------ -->
+  <div class="dashboard-main-wrapper">
+    <div class="dashboard-page-container">
+      
+      <!-- Top Header Matching Reference -->
+      <header class="main-top-header">
+        <div class="header-greeting-block">
+          <h1 id="pageTitleHeading">Dashboard</h1>
+          <p id="pageSubtitleHeading">Welcome back, Manager! Here's what's happening today.</p>
+        </div>
+
+        <div class="header-actions-block">
+          <!-- Voice Audio Alert Toggle -->
+          <button class="header-pill-btn" id="testVoiceBtn" title="Test Hindi Speech Announcement">
+            <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+            <span>Test Voice</span>
+          </button>
+
+          <!-- Scan on Mobile Button -->
+          <button class="header-pill-btn" id="openMobileQrModalBtn" style="background: var(--primary-green); color: #FFFFFF; border-color: var(--primary-green);">
+            <i data-lucide="qr-code" style="width: 16px; height: 16px;"></i>
+            <span>Scan on Mobile</span>
+          </button>
+
+          <!-- Notification Bell -->
+          <button class="header-icon-btn" id="notifBellBtn" title="Recent Notifications">
+            <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+            <span class="notification-dot"></span>
+          </button>
+
+          <!-- Settings Icon -->
+          <button class="header-icon-btn" id="settingsIconBtn" title="Preferences">
+            <i data-lucide="sliders" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <!-- Open Customer App -->
+          <a href="/order?table=2" target="_blank" class="header-pill-btn" style="text-decoration: none;">
+            <span>Customer View</span>
+            <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
+          </a>
+        </div>
+      </header>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 1: MAIN DASHBOARD OVERVIEW (EXACT REFERENCE 3 ROWS)
+      -------------------------------------------------------------------- -->
+      <section class="view-section view-active" id="view-dashboard">
+        
+        <!-- ROW 1: 3 STATISTICS CARDS -->
+        <div class="stats-cards-grid">
+          <!-- Card 1: Pending Orders -->
+          <div class="stat-card" onclick="switchNavView('orders')">
+            <div class="stat-card-top">
+              <div class="stat-icon-wrapper icon-pending">
+                <i data-lucide="clock" style="width: 22px; height: 22px;"></i>
+              </div>
+              <button class="stat-arrow-btn">
+                <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+            <div class="stat-card-bottom">
+              <div class="stat-number" id="statPendingOrders">0</div>
+              <div class="stat-title">Pending Orders</div>
+            </div>
+          </div>
+
+          <!-- Card 2: Orders in Progress -->
+          <div class="stat-card" onclick="switchNavView('kitchen')">
+            <div class="stat-card-top">
+              <div class="stat-icon-wrapper icon-progress">
+                <i data-lucide="flame" style="width: 22px; height: 22px;"></i>
+              </div>
+              <button class="stat-arrow-btn">
+                <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+            <div class="stat-card-bottom">
+              <div class="stat-number" id="statOrdersInProgress">0</div>
+              <div class="stat-title">Orders in Progress</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Available Tables -->
+          <div class="stat-card" onclick="switchNavView('tables')">
+            <div class="stat-card-top">
+              <div class="stat-icon-wrapper icon-tables">
+                <i data-lucide="check-circle-2" style="width: 22px; height: 22px;"></i>
+              </div>
+              <button class="stat-arrow-btn">
+                <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+            <div class="stat-card-bottom">
+              <div class="stat-number" id="statAvailableTables">12 / 12</div>
+              <div class="stat-title">Available Tables</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 2: TOTAL REVENUE (BAR CHART) & BUSINESS DATA (STACKED CARDS) -->
+        <div class="overview-middle-grid">
+          <!-- Left: Total Revenue Card with Weekly Bar Chart -->
+          <div class="revenue-chart-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Total Revenue</h3>
+              <div class="date-selector-pill">
+                <span>This Week</span>
+                <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+              </div>
+            </div>
+
+            <div class="revenue-meta-headline">
+              <div class="revenue-headline-amount" id="revenueHeadlineValue">₹24,850</div>
+              <div class="revenue-trend-badge">
+                <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
+                <span>+18.4% vs last week</span>
+              </div>
+            </div>
+
+            <!-- Handcrafted Precise Weekly Bar Chart Canvas -->
+            <div class="chart-bars-container" id="revenueChartContainer">
+              <!-- Mon -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Monday: ₹2,400">
+                  <div class="bar-fill" style="height: 45%;"></div>
+                </div>
+              </div>
+              <!-- Tue -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Tuesday: ₹3,100">
+                  <div class="bar-fill" style="height: 60%;"></div>
+                </div>
+              </div>
+              <!-- Wed -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Wednesday: ₹2,800">
+                  <div class="bar-fill" style="height: 52%;"></div>
+                </div>
+              </div>
+              <!-- Thu -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Thursday: ₹3,900">
+                  <div class="bar-fill" style="height: 75%;"></div>
+                </div>
+              </div>
+              <!-- Fri -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Friday: ₹4,800">
+                  <div class="bar-fill" style="height: 90%;"></div>
+                </div>
+              </div>
+              <!-- Sat -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Saturday: ₹5,400">
+                  <div class="bar-fill" style="height: 100%;"></div>
+                </div>
+              </div>
+              <!-- Sun -->
+              <div class="chart-bar-column">
+                <div class="bar-track" title="Sunday: ₹4,200">
+                  <div class="bar-fill" style="height: 82%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- X-Axis Days Labels -->
+            <div class="chart-x-labels">
+              <span class="chart-x-label">Mon</span>
+              <span class="chart-x-label">Tue</span>
+              <span class="chart-x-label">Wed</span>
+              <span class="chart-x-label">Thu</span>
+              <span class="chart-x-label">Fri</span>
+              <span class="chart-x-label">Sat</span>
+              <span class="chart-x-label">Sun</span>
+            </div>
+          </div>
+
+          <!-- Right: Business Data Card (3 Stacked Pastel Cards) -->
+          <div class="business-data-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Business Data</h3>
+            </div>
+
+            <div class="business-cards-stack">
+              <!-- Stack 1: Number of Customers (Pastel Green) -->
+              <div class="pastel-stat-card card-customers">
+                <div class="pastel-card-left">
+                  <div class="pastel-card-icon">
+                    <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div class="pastel-card-info">
+                    <span class="pastel-card-label">Number of Customers</span>
+                    <span class="pastel-card-value" id="statCustomersCount">142 Guests</span>
+                  </div>
+                </div>
+                <div class="revenue-trend-badge" style="background: rgba(22, 163, 106, 0.12);">
+                  +12.5%
+                </div>
+              </div>
+
+              <!-- Stack 2: Total Orders (Pastel Blue) -->
+              <div class="pastel-stat-card card-orders">
+                <div class="pastel-card-left">
+                  <div class="pastel-card-icon">
+                    <i data-lucide="receipt" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div class="pastel-card-info">
+                    <span class="pastel-card-label">Total Orders</span>
+                    <span class="pastel-card-value" id="statTotalOrdersCount">48 Orders</span>
+                  </div>
+                </div>
+                <div class="revenue-trend-badge" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">
+                  +8.4%
+                </div>
+              </div>
+
+              <!-- Stack 3: Average Order Value (Pastel Amber) -->
+              <div class="pastel-stat-card card-aov">
+                <div class="pastel-card-left">
+                  <div class="pastel-card-icon">
+                    <i data-lucide="credit-card" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div class="pastel-card-info">
+                    <span class="pastel-card-label">Average Order Value</span>
+                    <span class="pastel-card-value" id="statAovValue">₹365 AOV</span>
+                  </div>
+                </div>
+                <div class="revenue-trend-badge" style="background: rgba(245, 158, 11, 0.12); color: #D97706;">
+                  +4.2%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 3: RECENT ACTIVITY AND TOP DISHES -->
+        <div class="overview-bottom-grid">
+          <!-- Left: Recent Activity Card -->
+          <div class="recent-activity-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Recent Activity</h3>
+              <button class="date-selector-pill" onclick="switchNavView('orders')">
+                <span>View All</span>
+                <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+              </button>
+            </div>
+
+            <!-- Activity List Rows -->
+            <div class="activity-rows-list" id="recentActivityList">
+              <!-- Dynamically populated from actual orders -->
+            </div>
+          </div>
+
+          <!-- Right: Top Dishes Card -->
+          <div class="top-dishes-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Top Dishes</h3>
+              <button class="date-selector-pill" onclick="switchNavView('menus')">
+                <span>See All</span>
+                <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+              </button>
+            </div>
+
+            <!-- Top Dishes List -->
+            <div class="top-dishes-list" id="topDishesList">
+              <!-- Dynamically populated from menu -->
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 2: KITCHEN DISPLAY SYSTEM (LIVE KDS WITH HINDI VOICE ALERTS)
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-kitchen">
+        <!-- KDS Tabs & Action Controls Bar -->
+        <div class="kds-filters-bar">
+          <div class="kds-tabs-group">
+            <button class="kds-filter-pill active" data-filter="active">
+              <span>All Active</span>
+              <span class="pill-counter" id="kdsBadgeActive">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="pending">
+              <span>New Incoming</span>
+              <span class="pill-counter" id="kdsBadgePending">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="preparing">
+              <span>In Kitchen</span>
+              <span class="pill-counter" id="kdsBadgeCooking">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="served">
+              <span>Ready & Served</span>
+              <span class="pill-counter" id="kdsBadgeServed">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="completed">
+              <span>Completed</span>
+              <span class="pill-counter" id="kdsBadgeCompleted">0</span>
+            </button>
+          </div>
+
+          <div class="kds-tools-group">
+            <button class="btn-kds-tool btn-voice-active" id="kdsReplayVoiceBtn" title="Replay Hindi Voice Alert">
+              <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+              <span>Test Voice Alert</span>
+            </button>
+            <button class="btn-kds-tool" id="kdsMuteToggleBtn">
+              <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
+              <span id="kdsMuteStatusText">Sound On</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- KDS Production Tickets Grid -->
+        <div class="kds-tickets-grid" id="kdsTicketsGrid">
+          <!-- Dynamically populated tickets -->
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 3: TABLES & QR CODES MANAGEMENT
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-tables">
+        <div class="kds-filters-bar">
+          <div>
+            <h3 class="card-title">Restaurant Tables & Contactless QR Codes</h3>
+            <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+              Manage tables, check live occupancy, and print table QR standees.
+            </p>
+          </div>
+          <div class="kds-tools-group">
+            <a href="/qr-codes" target="_blank" class="btn-kds-primary" style="text-decoration: none;">
+              <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
+              <span>Print All Standees</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tables Grid -->
+        <div class="tables-grid" id="tablesManagementGrid">
+          <!-- Dynamically populated 12 tables -->
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 4: ORDERS LIST
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-orders">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">All Customer Orders</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Complete real-time order history and fulfillment statuses.
+              </p>
+            </div>
+          </div>
+          <div class="activity-rows-list" id="allOrdersTableView">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 5: MENUS CATALOG
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-menus">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">Menu Catalog & Dish Pricing</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Artisanal cafe offerings, vegetarian indicators, and current rates.
+              </p>
+            </div>
+          </div>
+          <div class="activity-rows-list" id="menuManagementCatalog">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 6: ANALYTICS & INSIGHTS
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-analytics">
+        <div class="overview-middle-grid">
+          <div class="revenue-chart-card">
+            <h3 class="card-title" style="margin-bottom: 16px;">Daily Sales Trends</h3>
+            <p style="font-size: 13px; color: var(--secondary-text); margin-bottom: 20px;">
+              Hourly guest velocity and order volume distribution throughout the day.
+            </p>
+            <div class="revenue-meta-headline">
+              <div class="revenue-headline-amount">₹4,280 / Peak Hour</div>
+              <div class="revenue-trend-badge">+22.4% Weekend Surge</div>
+            </div>
+          </div>
+          <div class="business-data-card">
+            <h3 class="card-title" style="margin-bottom: 16px;">Category Contribution</h3>
+            <div class="business-cards-stack">
+              <div class="pastel-stat-card card-customers">
+                <span style="font-weight: 700;">Burgers & Sandwiches</span>
+                <span style="font-weight: 800; color: var(--primary-green);">54% of Sales</span>
+              </div>
+              <div class="pastel-stat-card card-orders">
+                <span style="font-weight: 700;">Brews & Shakes</span>
+                <span style="font-weight: 800; color: #2563EB;">28% of Sales</span>
+              </div>
+              <div class="pastel-stat-card card-aov">
+                <span style="font-weight: 700;">Pizzas & Desserts</span>
+                <span style="font-weight: 800; color: #D97706;">18% of Sales</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </div>
 
-  <!-- Live Order Tracking Drawer -->
-  <div class="drawer-backdrop" id="statusModalOverlay">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h3 class="drawer-headline">Live Order Tracker</h3>
-        <button class="btn-close-drawer" id="closeStatusBtn">✕</button>
-      </div>
+  <!-- Guest Waiter/Service Request Popup Host -->
+  <div id="serviceAlertContainer"></div>
 
-      <div style="text-align: center; margin: 12px 0 20px;">
-        <div style="font-size: 42px; margin-bottom: 8px;" id="statusEmoji">👨‍🍳</div>
-        <h2 style="font-size: 19px; font-weight: 800; color: var(--accent-dark);" id="statusTitle">Order Being Prepared</h2>
-        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" id="statusSubtitle">Our chef has received your order and is preparing it fresh.</p>
-        <div style="margin-top: 10px; font-size: 12px; font-weight: 700; color: #71717a;" id="statusOrderIdTag">ORDER #ORD-123456</div>
-      </div>
+  <!-- Mobile Scan Modal (Scan-Optimized with Big High-Contrast QR) -->
+  <div class="qr-modal-backdrop" id="mobileQrScanModal">
+    <div class="qr-modal-card">
+      <button class="qr-modal-close-btn" id="closeMobileQrModalBtn">✕</button>
 
-      <!-- Elegant Stepper -->
-      <div class="progress-stepper">
-        <div class="stepper-node done" id="step1">
-          <div class="stepper-dot">✓</div>
-          <div class="stepper-info">
-            <h4>Order Received</h4>
-            <p>Order sent directly to the kitchen display</p>
-          </div>
-        </div>
-        <div class="stepper-node current" id="step2">
-          <div class="stepper-dot">2</div>
-          <div class="stepper-info">
-            <h4>Kitchen Cooking</h4>
-            <p>Your meal is currently being freshly prepared</p>
-          </div>
-        </div>
-        <div class="stepper-node" id="step3">
-          <div class="stepper-dot">3</div>
-          <div class="stepper-info">
-            <h4>Ready & Served</h4>
-            <p>Delivered fresh to your table</p>
-          </div>
-        </div>
-      </div>
-
-      <div style="background: var(--bg-muted); border-radius: var(--radius-sm); padding: 14px; margin-top: 12px;">
-        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px;">Order Details</h4>
-        <div id="statusItemsSummary" style="font-size: 13px; color: var(--text-primary); line-height: 1.6;">
-          <!-- Items summary -->
-        </div>
-      </div>
-
-      <button style="margin-top: 18px; width: 100%; padding: 13px; background: var(--bg-muted); border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer;" id="statusCloseActionBtn">
-        Back to Menu
-      </button>
-    </div>
-  </div>
-
-  <!-- Table Selection Fallback Modal -->
-  <div class="drawer-backdrop" id="tableSelectModal">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h3 class="drawer-headline">Select Table Number</h3>
-      </div>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
-        Please select your table number so the kitchen team delivers your order accurately:
+      <div style="font-size: 28px; margin-bottom: 6px;">📱</div>
+      <h3 class="qr-modal-title">Scan to Order on Mobile</h3>
+      <p class="qr-modal-subtitle">
+        Point your phone camera or Google Lens at this code to open the customer menu.
       </p>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;" id="tableGridContainer">
-        <!-- 1 to 12 buttons -->
+
+      <!-- Table Selector -->
+      <div class="qr-table-selector-row">
+        <span>Select Table:</span>
+        <select class="qr-select-control" id="modalTableSelect">
+          <option value="1">Table 01</option>
+          <option value="2" selected>Table 02 (Recommended)</option>
+          <option value="3">Table 03</option>
+          <option value="4">Table 04</option>
+          <option value="5">Table 05</option>
+          <option value="6">Table 06</option>
+          <option value="7">Table 07</option>
+          <option value="8">Table 08</option>
+          <option value="9">Table 09</option>
+          <option value="10">Table 10</option>
+          <option value="11">Table 11</option>
+          <option value="12">Table 12</option>
+        </select>
+      </div>
+
+      <!-- High Contrast Big QR Frame -->
+      <div class="qr-big-frame">
+        <canvas id="modalQrCanvas" class="qr-big-canvas"></canvas>
+      </div>
+
+      <div class="qr-scan-instruction-box">
+        ✓ Works on any iPhone Camera & Android QR Scanner
+      </div>
+
+      <!-- Live Link Box -->
+      <div class="qr-modal-link-box">
+        <span id="modalQrLinkText" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Loading link...</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="qr-modal-actions-row">
+        <button class="btn-qr-modal-copy" id="modalCopyLinkBtn">
+          <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+          <span id="copyLinkBtnText">Copy Link</span>
+        </button>
+        <a href="#" target="_blank" class="btn-qr-modal-open" id="modalOpenDirectBtn">
+          <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+          <span>Open Direct</span>
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div id="toastNotification">
-    <span id="toastIcon">✨</span> <span id="toastMessage">Item added</span>
-  </div>
-
+  <!-- Scripts -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/customer.js"></script>
+  <script src="/kitchen.js"></script>
 </body>
 </html>
-https://127.0.0.1:49191/static/artifacts/dcefe841-e574-4cd0-b006-271e87dad370/table_3_qr.png?csrf=fa1f4be5-ab1d-4377-afa3-cb3446bf454d

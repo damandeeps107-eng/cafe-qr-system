@@ -582,7 +582,7 @@ function renderTablesManagement() {
   for (let tableNo = 1; tableNo <= 12; tableNo++) {
     const isOccupied = occupiedTables.has(tableNo);
     const tableFmt = tableNo < 10 ? `0${tableNo}` : tableNo;
-    const targetUrl = `${baseUrl}/?table=${tableNo}`;
+    const targetUrl = `${baseUrl}/order?table=${tableNo}`;
 
     const card = document.createElement('div');
     card.className = 'table-management-card';
@@ -644,7 +644,7 @@ function renderBigModalQr(tableNo = 2) {
   const openDirect = document.getElementById('modalOpenDirectBtn');
   if (!canvas) return;
 
-  const targetUrl = `${baseUrl}/?table=${tableNo}`;
+  const targetUrl = `${baseUrl}/order?table=${tableNo}`;
   if (linkText) linkText.innerText = targetUrl;
   if (openDirect) openDirect.href = targetUrl;
 
@@ -693,7 +693,7 @@ function setupMobileQrModal() {
   if (copyBtn) {
     copyBtn.addEventListener('click', async () => {
       const selected = tableSelect ? tableSelect.value : '2';
-      const urlToCopy = `${baseUrl}/?table=${selected}`;
+      const urlToCopy = `${baseUrl}/order?table=${selected}`;
       try {
         await navigator.clipboard.writeText(urlToCopy);
         if (copyText) copyText.innerText = 'Copied! ✓';

@@ -85,21 +85,25 @@ function generateHindiSpeechText(order) {
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // --- Web Routes ---
-// 1. Customer Ordering App
-app.get('/', (req, res) => {
-  res.sendFile('index.html', { root: PUBLIC_DIR });
-});
-
+// 1. Dedicated Customer Ordering App
 app.get('/order', (req, res) => {
+  res.sendFile('order.html', { root: PUBLIC_DIR });
+});
+
+// 2. Main Root Domain: If ?table= query present (e.g. from table QR code), send Customer Menu; otherwise send Restaurant Dashboard
+app.get('/', (req, res) => {
+  if (req.query.table) {
+    return res.sendFile('order.html', { root: PUBLIC_DIR });
+  }
   res.sendFile('index.html', { root: PUBLIC_DIR });
 });
 
-// 2. Separate Restaurant / Kitchen Live Dashboard with Voice Alerts
+// 3. Restaurant / Kitchen Live Dashboard with Voice Alerts
 app.get(['/kitchen', '/dashboard', '/admin'], (req, res) => {
-  res.sendFile('kitchen.html', { root: PUBLIC_DIR });
+  res.sendFile('index.html', { root: PUBLIC_DIR });
 });
 
-// 3. Separate QR Codes Generator & Table Standees
+// 4. Separate QR Codes Generator & Table Standees
 app.get('/qr-codes', (req, res) => {
   res.sendFile('qr-codes.html', { root: PUBLIC_DIR });
 });
