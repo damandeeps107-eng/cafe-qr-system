@@ -372,7 +372,7 @@
                 <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
               </button>
             </div>
-            <div class="activity-rows-list" id="recentActivityList"></div>
+            <div class="recent-activity-cards-stack" id="recentActivityList"></div>
           </div>
 
           <div class="top-dishes-card">
@@ -468,7 +468,7 @@
               </p>
             </div>
           </div>
-          <div class="activity-rows-list" id="allOrdersTableView"></div>
+          <div class="orders-saas-grid" id="allOrdersTableView"></div>
         </div>
       </section>
 
@@ -710,6 +710,50 @@
           <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
           <span>Open Direct</span>
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal (Pop-up on Order Card / Activity Click) -->
+  <div class="order-modal-backdrop" id="orderDetailsModal" onclick="closeOrderDetailsModal()">
+    <div class="order-modal-sheet" onclick="event.stopPropagation()">
+      <div class="order-modal-top-bar">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 id="modalOrderHeadline" style="font-size: 18px; font-weight: 800; color: #111827; margin: 0;">Order Details</h3>
+            <span id="modalOrderTablePill" class="order-table-pill">Table --</span>
+          </div>
+          <p id="modalOrderMetaSubtitle" style="font-size: 12px; color: #6B7280; margin: 3px 0 0 0;">Created at --</p>
+        </div>
+        <button onclick="closeOrderDetailsModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6B7280; padding: 4px;">✕</button>
+      </div>
+
+      <!-- Items List -->
+      <div style="padding: 16px 0;">
+        <div style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Ordered Items</div>
+        <div id="modalOrderItemsContainer" style="display: flex; flex-direction: column; gap: 4px;"></div>
+      </div>
+
+      <!-- Special Note -->
+      <div id="modalOrderNoteBox" style="display: none; background: #FFFBEB; border: 1px dashed #FDE68A; padding: 10px 14px; border-radius: 8px; font-size: 12px; color: #B45309; margin-bottom: 16px;">
+        <strong>Special Instructions:</strong> <span id="modalOrderNoteText"></span>
+      </div>
+
+      <!-- Bill Total Row -->
+      <div style="background: #F9FAFB; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <span style="font-size: 14px; font-weight: 700; color: #4B5563;">Total Bill Amount</span>
+        <span id="modalOrderTotalFigure" style="font-size: 20px; font-weight: 800; color: #16A36A;">₹0</span>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button id="modalOrderVoiceBtn" class="btn-kds-secondary" style="flex: 1; min-width: 140px; justify-content: center; padding: 10px 14px;">
+          <i data-lucide="volume-2" style="width: 15px; height: 15px;"></i>
+          <span>Voice Announcement</span>
+        </button>
+        <button onclick="closeOrderDetailsModal()" class="btn-kds-primary" style="flex: 1; min-width: 100px; justify-content: center; padding: 10px 14px;">
+          <span>Close</span>
+        </button>
       </div>
     </div>
   </div>

@@ -792,6 +792,191 @@ function renderDashboardOverview() {
   renderTopDishesList();
 }
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getMenuItemImage(item) {
+  if (!item) return '/images/burger.jpg';
+
+  // 1. Direct item image if available
+  if (item.image && typeof item.image === 'string' && item.image.trim().length > 0) {
+    return item.image;
+  }
+
+  // 2. Lookup in loaded menu database
+  if (Array.isArray(menuData) && menuData.length > 0) {
+    if (item.id) {
+      const matchById = menuData.find(m => m.id === item.id);
+      if (matchById && matchById.image) return matchById.image;
+    }
+    if (item.name) {
+      const lowerName = item.name.toLowerCase().trim();
+      const matchByName = menuData.find(m => m.name && m.name.toLowerCase().trim() === lowerName);
+      if (matchByName && matchByName.image) return matchByName.image;
+
+      const partialMatch = menuData.find(m => m.name && (lowerName.includes(m.name.toLowerCase()) || m.name.toLowerCase().includes(lowerName)));
+      if (partialMatch && partialMatch.image) return partialMatch.image;
+    }
+  }
+
+  // 3. Fallback to existing authentic food images by keyword
+  const name = (item.name || '').toLowerCase();
+  if (name.includes('burger')) return '/images/burger.jpg';
+  if (name.includes('sandwich') || name.includes('club') || name.includes('toast') || name.includes('panini')) return '/images/sandwich.jpg';
+  if (name.includes('coffee') || name.includes('cold') || name.includes('brew') || name.includes('latte') || name.includes('cappuccino')) return '/images/coffee.jpg';
+  if (name.includes('pizza')) return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80';
+  if (name.includes('fries') || name.includes('peri')) return 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80';
+  if (name.includes('cake') || name.includes('lava') || name.includes('brownie') || name.includes('sweet') || name.includes('dessert')) return 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80';
+  if (name.includes('shake') || name.includes('chocolate') || name.includes('mojito') || name.includes('drink')) return 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=80';
+
+  return '/images/burger.jpg';
+}
+
+function renderOrderThumbnailsStack(items) {
+  if (!items || !items.length) {
+    return `
+      <div class="food-avatar-single">
+        <img class="food-thumb-img single" src="/images/burger.jpg" alt="Dish" onerror="this.src='/images/burger.jpg'" />
+      </div>
+    `;
+  }
+
+  // Single item order
+  if (items.length === 1) {
+    const item = items[0];
+    const imgSrc = getMenuItemImage(item);
+    return `
+      <div class="food-avatar-single">
+        <img class="food-thumb-img single" src="${imgSrc}" alt="${escapeHtml(item.name)}" onerror="this.src='/images/burger.jpg'" />
+      </div>
+    `;
+  }
+
+  // Multiple items: show overlapping small thumbnails (up to 3) with count badge
+  const visibleItems = items.slice(0, 3);
+  const extraCount = items.length - 3;
+
+  let stackHtml = `<div class="food-avatar-stack">`;
+  visibleItems.forEach((item, index) => {
+    const imgSrc = getMenuItemImage(item);
+    const zIndex = 10 - index;
+    stackHtml += `
+      <div class="food-stack-item" style="z-index: ${zIndex};">
+        <img class="food-thumb-img stack" src="${imgSrc}" alt="${escapeHtml(item.name)}" onerror="this.src='/images/burger.jpg'" />
+      </div>
+    `;
+  });
+
+  if (extraCount > 0) {
+    stackHtml += `<div class="food-stack-more">+${extraCount}</div>`;
+  }
+  stackHtml += `</div>`;
+  return stackHtml;
+}
+
+function formatRelativeTime(dateString) {
+  if (!dateString) return 'Just now';
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return 'Recently';
+
+  const now = new Date();
+  const diffSec = Math.floor((now - d) / 1000);
+
+  if (diffSec < 45) return 'Just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} ${diffMin === 1 ? 'min' : 'mins'} ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} ${diffHr === 1 ? 'hour' : 'hours'} ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function openOrderDetailsModal(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const modal = document.getElementById('orderDetailsModal');
+  if (!modal) return;
+
+  const headlineEl = document.getElementById('modalOrderHeadline');
+  if (headlineEl) headlineEl.innerText = `Order #${order.id}`;
+
+  const tablePillEl = document.getElementById('modalOrderTablePill');
+  if (tablePillEl) tablePillEl.innerText = `Table ${order.tableNo}`;
+
+  const metaSubtitleEl = document.getElementById('modalOrderMetaSubtitle');
+  if (metaSubtitleEl) {
+    const relTime = formatRelativeTime(order.createdAt);
+    const exactTime = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    metaSubtitleEl.innerText = `Placed ${relTime} • ${exactTime} • Status: ${order.status.toUpperCase()}`;
+  }
+
+  const itemsContainer = document.getElementById('modalOrderItemsContainer');
+  if (itemsContainer) {
+    const items = order.items || [];
+    itemsContainer.innerHTML = items.map(item => {
+      const imgSrc = getMenuItemImage(item);
+      const unitPrice = item.price || 0;
+      const lineTotal = unitPrice * (item.qty || 1);
+      return `
+        <div class="order-modal-item-row">
+          <img class="modal-item-thumb" src="${imgSrc}" alt="${escapeHtml(item.name)}" onerror="this.src='/images/burger.jpg'" />
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 14px; font-weight: 700; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${escapeHtml(item.name)}
+            </div>
+            <div style="font-size: 12px; color: #6B7280; margin-top: 2px;">
+              ₹${unitPrice} × ${item.qty}
+            </div>
+          </div>
+          <div style="font-size: 14px; font-weight: 800; color: #111827;">
+            ₹${lineTotal}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const noteBox = document.getElementById('modalOrderNoteBox');
+  const noteText = document.getElementById('modalOrderNoteText');
+  const noteContent = order.specialNote || order.note;
+  if (noteBox && noteText) {
+    if (noteContent && noteContent.trim().length > 0) {
+      noteText.innerText = noteContent;
+      noteBox.style.display = 'block';
+    } else {
+      noteBox.style.display = 'none';
+    }
+  }
+
+  const totalFigure = document.getElementById('modalOrderTotalFigure');
+  if (totalFigure) totalFigure.innerText = `₹${order.totalAmount}`;
+
+  const voiceBtn = document.getElementById('modalOrderVoiceBtn');
+  if (voiceBtn) {
+    voiceBtn.onclick = () => replayOrderVoice(order.id);
+  }
+
+  modal.classList.add('active');
+  if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+}
+
+function closeOrderDetailsModal() {
+  const modal = document.getElementById('orderDetailsModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+}
+
 function renderRecentActivityList() {
   const list = document.getElementById('recentActivityList');
   if (!list) return;
@@ -807,34 +992,79 @@ function renderRecentActivityList() {
         </button>
       </div>
     `;
+    if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
     return;
   }
 
   list.innerHTML = displayOrders.map(order => {
-    const timeFormatted = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const itemsSummary = order.items ? order.items.map(i => `${i.qty}× ${i.name}`).join(', ') : 'Assorted items';
-    const statusClass = order.status === 'completed' ? 'status-completed' : (order.status === 'preparing' ? 'status-cooking' : 'status-pending');
-    const statusLabel = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+    const items = order.items || [];
+    const firstItem = items[0] || { name: 'Assorted Dish', qty: 1 };
+    const heroImg = getMenuItemImage(firstItem);
+    const hasMore = items.length > 1;
+    const moreCount = items.length - 1;
+    const foodSummary = `${firstItem.qty}× ${escapeHtml(firstItem.name)}${hasMore ? ` +${moreCount} more` : ''}`;
+
+    const relTime = formatRelativeTime(order.createdAt);
+    const status = order.status || 'pending';
+    let statusLabel = 'New';
+    let statusDotColor = '#F59E0B';
+    let statusBg = '#FEF3C7';
+    let statusTextColor = '#B45309';
+
+    if (status === 'preparing') {
+      statusLabel = 'Cooking';
+      statusBg = '#EFF6FF';
+      statusTextColor = '#1D4ED8';
+      statusDotColor = '#3B82F6';
+    } else if (status === 'served') {
+      statusLabel = 'Served';
+      statusBg = '#F3E8FF';
+      statusTextColor = '#7E22CE';
+      statusDotColor = '#A855F7';
+    } else if (status === 'completed') {
+      statusLabel = 'Done';
+      statusBg = '#ECFDF5';
+      statusTextColor = '#047857';
+      statusDotColor = '#10B981';
+    }
+
+    const titleText = status === 'completed' ? 'Order Completed' : (status === 'preparing' ? 'Kitchen Preparing' : 'New Order Received');
 
     return `
-      <div class="activity-row" onclick="switchNavView('orders')">
-        <div class="activity-row-left">
-          <div class="activity-icon-box">
-            <i data-lucide="shopping-bag" style="width: 18px; height: 18px;"></i>
+      <div class="recent-activity-item-card" onclick="openOrderDetailsModal('${order.id}')" title="Click to view order #${order.id} details">
+        <div class="activity-thumb-wrapper">
+          <img class="activity-hero-thumb" src="${heroImg}" alt="${escapeHtml(firstItem.name)}" onerror="this.src='/images/burger.jpg'" />
+          ${hasMore ? `<span class="activity-multidish-count">${items.length} items</span>` : ''}
+        </div>
+
+        <div class="activity-details-block">
+          <div class="activity-header-line">
+            <span class="activity-bold-title">${titleText}</span>
+            <span class="activity-status-dot-pill" style="background: ${statusBg}; color: ${statusTextColor};">
+              <span class="activity-dot" style="background: ${statusDotColor};"></span>
+              ${statusLabel}
+            </span>
           </div>
-          <div class="activity-info">
-            <span class="activity-title">Table ${order.tableNo} &bull; ${order.customerName || 'Guest'}</span>
-            <span class="activity-desc">${itemsSummary}</span>
+
+          <div class="activity-table-food-line">
+            <span class="activity-table-tag">Table ${order.tableNo}</span>
+            <span class="activity-dot-separator">•</span>
+            <span class="activity-food-name">${foodSummary}</span>
+          </div>
+
+          <div class="activity-price-time-line">
+            <span class="activity-price-tag">₹${order.totalAmount}</span>
+            <span class="activity-dot-separator">•</span>
+            <span class="activity-time-tag">${relTime}</span>
           </div>
         </div>
-        <div class="activity-row-right">
-          <span class="activity-time">${timeFormatted}</span>
-          <span class="order-status-chip ${statusClass}">${statusLabel}</span>
-          <span style="font-size: 13px; font-weight: 700; color: #171717;">₹${order.totalAmount}</span>
-        </div>
+
+        <i data-lucide="chevron-right" class="activity-action-arrow" style="width: 18px; height: 18px;"></i>
       </div>
     `;
   }).join('');
+
+  if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
 }
 
 function renderTopDishesList() {
@@ -1155,30 +1385,123 @@ function renderAllOrdersView() {
   if (!container) return;
 
   if (orders.length === 0) {
-    container.innerHTML = '<p style="color: var(--secondary-text); padding: 16px;">No orders found yet.</p>';
+    container.innerHTML = `
+      <div class="empty-state-card" style="padding: 36px; text-align: center; color: var(--secondary-text); grid-column: 1 / -1; background: #FFFFFF; border: 1px dashed #E5E7EB; border-radius: 12px;">
+        <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5;"></i>
+        <h4 style="font-size: 15px; font-weight: 700; color: #374151;">No Orders Yet</h4>
+        <p style="font-size: 13px; color: #6B7280; margin-top: 4px;">Orders placed by guests at tables will appear here in real time.</p>
+        <button onclick="switchNavView('tables')" style="margin-top: 14px; background: var(--primary-green); color: #FFFFFF; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+          View Table QR Codes &rarr;
+        </button>
+      </div>
+    `;
+    if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
     return;
   }
 
   container.innerHTML = orders.map(order => {
-    const timeFormatted = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const itemsSummary = order.items.map(i => `${i.qty}× ${i.name}`).join(', ');
-    const statusClass = order.status === 'completed' ? 'status-completed' : (order.status === 'preparing' ? 'status-cooking' : 'status-pending');
+    const items = order.items || [];
+    const thumbnailsStackHtml = renderOrderThumbnailsStack(items);
+    const relTime = formatRelativeTime(order.createdAt);
+    const exactTime = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Status Badge config
+    const status = order.status || 'pending';
+    let statusBadgeClass = 'status-badge-pending';
+    let statusLabel = 'New Incoming';
+
+    if (status === 'preparing') {
+      statusBadgeClass = 'status-badge-preparing';
+      statusLabel = 'In Kitchen';
+    } else if (status === 'served') {
+      statusBadgeClass = 'status-badge-served';
+      statusLabel = 'Served';
+    } else if (status === 'completed') {
+      statusBadgeClass = 'status-badge-completed';
+      statusLabel = 'Completed';
+    } else if (status === 'cancelled') {
+      statusBadgeClass = 'status-badge-cancelled';
+      statusLabel = 'Cancelled';
+    }
+
+    // Top 3 items summary lines
+    const displayItems = items.slice(0, 3);
+    const remainingCount = items.length - 3;
+
+    const itemsSummaryHtml = displayItems.map(item => `
+      <div class="order-item-line">
+        <span class="item-name-text">
+          <span class="item-qty-tag">${item.qty}×</span>${escapeHtml(item.name)}
+        </span>
+        <span class="item-price-text">₹${(item.price || 0) * (item.qty || 1)}</span>
+      </div>
+    `).join('');
+
+    const moreItemsHtml = remainingCount > 0 ? `
+      <div class="order-more-items-text">+${remainingCount} more dish${remainingCount > 1 ? 'es' : ''}</div>
+    ` : '';
+
+    const noteHtml = (order.specialNote || order.note) ? `
+      <div class="order-note-pill" title="${escapeHtml(order.specialNote || order.note)}">
+        <i data-lucide="message-square" style="width: 12px; height: 12px; flex-shrink: 0;"></i>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(order.specialNote || order.note)}</span>
+      </div>
+    ` : '';
 
     return `
-      <div class="activity-row">
-        <div class="activity-row-left">
-          <div class="activity-icon-box">
-            <i data-lucide="receipt" style="width: 18px; height: 18px;"></i>
+      <div class="order-saas-card" onclick="openOrderDetailsModal('${order.id}')" title="Click to view details for Order #${order.id}">
+        <!-- Top Card Header -->
+        <div class="order-card-header">
+          <div class="order-header-left">
+            <span class="order-id-badge">#${order.id}</span>
+            <span class="order-table-pill">
+              <i data-lucide="map-pin" style="width: 11px; height: 11px;"></i>
+              <span>Table ${order.tableNo}</span>
+            </span>
+            ${order.customerName && order.customerName !== `Table ${order.tableNo}` ? `<span class="order-guest-name">• ${escapeHtml(order.customerName)}</span>` : ''}
           </div>
-          <div class="activity-info">
-            <span class="activity-title">Order ${order.id} &bull; Table ${order.tableNo}</span>
-            <span class="activity-desc">${itemsSummary}</span>
+          <div class="order-status-badge ${statusBadgeClass}">
+            <span class="status-dot"></span>
+            <span>${statusLabel}</span>
           </div>
         </div>
-        <div class="activity-row-right">
-          <span class="activity-time">${timeFormatted}</span>
-          <span class="order-status-chip ${statusClass}">${order.status}</span>
-          <span style="font-size: 14px; font-weight: 800; color: #171717;">₹${order.totalAmount}</span>
+
+        <!-- Middle Card Body -->
+        <div class="order-card-body">
+          <div class="order-visual-column">
+            ${thumbnailsStackHtml}
+          </div>
+          <div class="order-items-column">
+            <div class="order-items-summary-list">
+              ${itemsSummaryHtml}
+            </div>
+            ${moreItemsHtml}
+            ${noteHtml}
+          </div>
+        </div>
+
+        <!-- Bottom Card Footer -->
+        <div class="order-card-footer">
+          <div class="order-footer-meta">
+            <span class="order-time-label">
+              <i data-lucide="clock" style="width: 11px; height: 11px;"></i>
+              <span>${relTime} (${exactTime})</span>
+            </span>
+            <div class="order-total-block">
+              <span class="total-caption">Total:</span>
+              <span class="total-figure">₹${order.totalAmount}</span>
+            </div>
+          </div>
+
+          <div class="order-footer-actions">
+            <button class="btn-order-voice-icon" title="Listen voice announcement" onclick="event.stopPropagation(); replayOrderVoice('${order.id}')">
+              <i data-lucide="volume-2" style="width: 15px; height: 15px;"></i>
+            </button>
+            <button class="btn-order-view-details" onclick="event.stopPropagation(); openOrderDetailsModal('${order.id}')">
+              <span>View Details</span>
+              <i data-lucide="chevron-right" style="width: 13px; height: 13px;"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -1302,6 +1625,8 @@ window.testVoiceAnnouncement = testVoiceAnnouncement;
 window.testHindiVoice = testVoiceAnnouncement; // backward compatibility alias
 window.showToast = showToast;
 window.openNotificationDrawer = openNotificationDrawer;
+window.openOrderDetailsModal = openOrderDetailsModal;
+window.closeOrderDetailsModal = closeOrderDetailsModal;
 
 // -----------------------------------------------------------------------------
 // 12. SOCKET.IO EVENT HANDLERS (Safely bounded)

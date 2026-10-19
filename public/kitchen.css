@@ -1570,3 +1570,608 @@ body {
   background: #F0F0F0;
 }
 
+/* -------------------------------------------------------------------------
+   15. PREMIUM RESTAURANT SAAS ORDER CARDS & COMPACT ACTIVITY CARDS
+------------------------------------------------------------------------- */
+
+/* All Customer Orders Grid (2 Columns Desktop, 1 Column Mobile) */
+.orders-saas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .orders-saas-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Premium Order Card */
+.order-saas-card {
+  background: #FFFFFF;
+  border: 1px solid #EAEAEA;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.035);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.order-saas-card:hover {
+  border-color: rgba(22, 163, 106, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+}
+
+/* Card Header */
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.order-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-id-badge {
+  font-family: 'Space Grotesk', var(--font-main);
+  font-weight: 800;
+  font-size: 14px;
+  color: #171717;
+  letter-spacing: -0.2px;
+}
+
+.order-table-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(22, 163, 106, 0.1);
+  color: #16A36A;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.order-guest-name {
+  font-size: 12px;
+  color: #737373;
+  font-weight: 500;
+}
+
+/* Status Badges */
+.order-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-badge-pending {
+  background: #FEF3C7;
+  color: #B45309;
+}
+.status-badge-pending .status-dot {
+  background: #F59E0B;
+}
+
+.status-badge-preparing {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+.status-badge-preparing .status-dot {
+  background: #3B82F6;
+}
+
+.status-badge-served {
+  background: #F3E8FF;
+  color: #7E22CE;
+}
+.status-badge-served .status-dot {
+  background: #A855F7;
+}
+
+.status-badge-completed {
+  background: #ECFDF5;
+  color: #047857;
+}
+.status-badge-completed .status-dot {
+  background: #10B981;
+}
+
+.status-badge-cancelled {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+.status-badge-cancelled .status-dot {
+  background: #EF4444;
+}
+
+/* Card Body Layout */
+.order-card-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+/* Food Visual Thumbnails Stack */
+.order-visual-column {
+  flex-shrink: 0;
+}
+
+.food-avatar-single {
+  width: 74px;
+  height: 74px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+}
+
+.food-thumb-img.single {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.order-saas-card:hover .food-thumb-img.single {
+  transform: scale(1.06);
+}
+
+.food-avatar-stack {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  min-height: 74px;
+}
+
+.food-stack-item {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  margin-left: -20px;
+  background: #F9FAFB;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.food-stack-item:first-child {
+  margin-left: 0;
+}
+
+.order-saas-card:hover .food-stack-item {
+  transform: translateY(-2px);
+}
+
+.food-thumb-img.stack {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.food-stack-more {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #171717;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  margin-left: -12px;
+  flex-shrink: 0;
+}
+
+/* Order Items Summary */
+.order-items-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-items-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.order-item-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.item-qty-tag {
+  font-weight: 800;
+  color: #16A36A;
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.item-name-text {
+  font-weight: 600;
+  color: #1F2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.item-price-text {
+  font-weight: 700;
+  color: #6B7280;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.order-more-items-text {
+  font-size: 12px;
+  color: #9CA3AF;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.order-note-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  background: #FFFBEB;
+  color: #B45309;
+  border: 1px dashed #FDE68A;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Card Footer */
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.order-footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.order-time-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+.order-total-block {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.total-caption {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.total-figure {
+  font-family: 'Space Grotesk', var(--font-main);
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.order-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-order-voice-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #4B5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-order-voice-icon:hover {
+  background: rgba(22, 163, 106, 0.1);
+  color: #16A36A;
+  border-color: rgba(22, 163, 106, 0.3);
+}
+
+.btn-order-view-details {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #FAFAFA;
+  border: 1px solid #E5E7EB;
+  color: #1F2937;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-order-view-details:hover {
+  background: var(--primary-green);
+  color: #FFFFFF;
+  border-color: var(--primary-green);
+}
+
+/* -------------------------------------------------------------------------
+   COMPACT HORIZONTAL RECENT ACTIVITY CARDS (Dashboard Overview Row 3)
+------------------------------------------------------------------------- */
+.recent-activity-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.recent-activity-item-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+  border: 1px solid #EAEAEA;
+  border-radius: 12px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.recent-activity-item-card:hover {
+  border-color: rgba(22, 163, 106, 0.35);
+  transform: translateX(3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.activity-thumb-wrapper {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  flex-shrink: 0;
+  background: #F3F4F6;
+}
+
+.activity-hero-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.recent-activity-item-card:hover .activity-hero-thumb {
+  transform: scale(1.08);
+}
+
+.activity-multidish-count {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(17, 24, 39, 0.85);
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.activity-details-block {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.activity-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-bold-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.activity-status-dot-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.activity-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.activity-table-food-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #4B5563;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-table-tag {
+  font-weight: 700;
+  color: #16A36A;
+}
+
+.activity-dot-separator {
+  color: #D1D5DB;
+}
+
+.activity-food-name {
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-price-time-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #6B7280;
+}
+
+.activity-price-tag {
+  font-weight: 800;
+  color: #111827;
+}
+
+.activity-time-tag {
+  color: #9CA3AF;
+}
+
+.activity-action-arrow {
+  color: #D1D5DB;
+  transition: transform 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.recent-activity-item-card:hover .activity-action-arrow {
+  color: #16A36A;
+  transform: translateX(2px);
+}
+
+/* -------------------------------------------------------------------------
+   ORDER DETAILS MODAL (Pop-up on card click)
+------------------------------------------------------------------------- */
+.order-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.order-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.order-modal-sheet {
+  background: #FFFFFF;
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  padding: 24px;
+  transform: scale(0.96) translateY(10px);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.order-modal-backdrop.active .order-modal-sheet {
+  transform: scale(1) translateY(0);
+}
+
+.order-modal-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #EAEAEA;
+}
+
+.order-modal-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.modal-item-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #E5E7EB;
+  background: #F9FAFB;
+}
+
