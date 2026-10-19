@@ -2,10 +2,10 @@
   "version": 2,
   "rewrites": [
     { "source": "/", "destination": "/index.html" },
-    { "source": "/order", "destination": "/index.html" },
-    { "source": "/kitchen", "destination": "/kitchen.html" },
-    { "source": "/dashboard", "destination": "/kitchen.html" },
-    { "source": "/admin", "destination": "/kitchen.html" },
+    { "source": "/kitchen", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/order", "destination": "/order.html" },
     { "source": "/qr-codes", "destination": "/qr-codes.html" },
     { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]

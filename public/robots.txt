@@ -1,12 +1,3 @@
-# Block Google & search engines from indexing private restaurant dashboard & kitchen data
+# Block Google & search engines from indexing the private restaurant management dashboard
 User-agent: *
-Disallow: /kitchen
-Disallow: /dashboard
-Disallow: /admin
-Disallow: /qr-codes
-Disallow: /api/
-
-# Allow public customer ordering menu
-Allow: /
-Allow: /order
-Allow: /images/
+Disallow: /

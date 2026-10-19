@@ -2,237 +2,825 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Royal Cafe & Bistro — Dine-In Menu</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Royal Cafe — Restaurant Management Dashboard</title>
   
-  <!-- Premium Fonts -->
+  <script>
+    // If table parameter exists (scanned from customer table QR), redirect directly to Customer Menu
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('table')) {
+        window.location.replace('/order' + window.location.search);
+      }
+    })();
+  </script>
+
+  <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="/customer.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Local Bundled QRCode.js -->
+  <script src="/vendor/qrcode.min.js"></script>
+
+  <link rel="stylesheet" href="/kitchen.css">
 </head>
 <body>
 
-  <!-- Top Brand Navigation Header -->
-  <header class="brand-header">
-    <div class="brand-header-inner">
-      <div class="brand-identity">
-        <h1 class="brand-title">The Royal Cafe</h1>
-        <div class="brand-badge-sub">Artisanal Bakery & Bistro</div>
+  <!-- Audio Alerts Banner -->
+  <aside class="audio-banner-ribbon" id="audioBanner" style="display: none;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+      <span><strong>Hindi Voice Alerts:</strong> Click to enable spoken kitchen order announcements.</span>
+    </div>
+    <button class="btn-audio-enable" id="enableAudioBtn">Enable Voice Alerts</button>
+  </aside>
+
+  <!-- -----------------------------------------------------------------------
+       1. EXACT REFERENCE SIDEBAR
+  ------------------------------------------------------------------------ -->
+  <aside class="dashboard-sidebar">
+    <!-- Top Brand Header -->
+    <div class="sidebar-header">
+      <div class="restaurant-logo-box">
+        <i data-lucide="utensils" style="width: 20px; height: 20px;"></i>
       </div>
-      
-      <div class="table-indicator" id="tableBadgeBtn" title="Change Table Number">
-        <span class="table-status-dot"></span>
-        <span class="table-text" id="tableBadgeText">TABLE 02</span>
+      <div class="restaurant-title-wrap">
+        <span class="restaurant-name">The Royal Cafe</span>
+        <span class="restaurant-type">Bistro & Dining</span>
       </div>
     </div>
-  </header>
 
-  <!-- Quick Guest Assistance Bar -->
-  <section class="service-bar">
-    <div class="service-bar-inner">
-      <button class="btn-service" id="callWaterBtn">
-        <span>💧</span> Water
-      </button>
-      <button class="btn-service" id="callWaiterBtn">
-        <span>🛎️</span> Call Waiter
-      </button>
-      <button class="btn-service" id="askBillBtn">
-        <span>🧾</span> Request Bill
-      </button>
-    </div>
-  </section>
-
-  <!-- Active Order Progress Pill (shown when order is placed) -->
-  <div class="live-status-pill">
-    <div class="live-status-card hidden" id="activeOrderBanner">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="pulse-indicator"></span>
-        <div>
-          <div style="font-size: 13px; font-weight: 700;">Order in Progress</div>
-          <div style="font-size: 11px; color: #a1a1aa;" id="bannerStatusText">Kitchen is preparing your order...</div>
+    <!-- Store Selector Section -->
+    <div class="store-selector-container">
+      <div class="store-selector-box" title="Switch Restaurant Branch">
+        <div class="store-info">
+          <i data-lucide="store" class="store-icon"></i>
+          <span>Main Cafe Branch</span>
         </div>
+        <i data-lucide="chevron-down" class="store-chevron"></i>
       </div>
-      <div style="font-size: 12px; font-weight: 700; color: #f4f4f5; display: flex; align-items: center; gap: 4px;">
-        Track <span>→</span>
+    </div>
+
+    <!-- Scrollable Navigation Area -->
+    <div class="sidebar-scroll-area">
+      <!-- Main Menu Section -->
+      <div>
+        <div class="nav-section-label">Menu</div>
+        <ul class="nav-links-list">
+          <li>
+            <button class="nav-item-btn active" data-target="dashboard">
+              <div class="nav-item-left">
+                <i data-lucide="layout-grid" class="nav-icon"></i>
+                <span>Dashboard</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="orders">
+              <div class="nav-item-left">
+                <i data-lucide="shopping-bag" class="nav-icon"></i>
+                <span>Orders</span>
+              </div>
+              <span class="nav-badge-pill" id="sidebarOrdersBadge">0</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="tables">
+              <div class="nav-item-left">
+                <i data-lucide="table" class="nav-icon"></i>
+                <span>Tables & QR</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="kitchen">
+              <div class="nav-item-left">
+                <i data-lucide="chef-hat" class="nav-icon"></i>
+                <span>Kitchen Display</span>
+              </div>
+              <span class="nav-badge-pill" id="sidebarKitchenBadge" style="background: rgba(22, 163, 106, 0.15); color: #16A36A;">LIVE</span>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="menus">
+              <div class="nav-item-left">
+                <i data-lucide="book-open" class="nav-icon"></i>
+                <span>Menus</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="analytics">
+              <div class="nav-item-left">
+                <i data-lucide="bar-chart-3" class="nav-icon"></i>
+                <span>Analytics</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Others Section -->
+      <div>
+        <div class="nav-section-label">Others</div>
+        <ul class="nav-links-list">
+          <li>
+            <button class="nav-item-btn" data-target="help">
+              <div class="nav-item-left">
+                <i data-lucide="help-circle" class="nav-icon"></i>
+                <span>Help Center</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-target="settings">
+              <div class="nav-item-left">
+                <i data-lucide="settings" class="nav-icon"></i>
+                <span>Settings</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom Admin Profile Card -->
+    <div class="sidebar-footer">
+      <div class="admin-profile-card">
+        <div class="profile-avatar-wrap">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Admin Avatar" class="profile-avatar">
+          <div class="profile-details">
+            <span class="profile-name">Alex Morgan</span>
+            <span class="profile-role">Store Manager</span>
+          </div>
+        </div>
+        <button class="profile-action-btn" title="Profile Settings" onclick="switchNavView('settings')">
+          <i data-lucide="more-vertical" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- -----------------------------------------------------------------------
+       2. MAIN CONTENT AREA & TOP HEADER
+  ------------------------------------------------------------------------ -->
+  <div class="dashboard-main-wrapper">
+    <div class="dashboard-page-container">
+      
+      <!-- Top Header Matching Reference -->
+      <header class="main-top-header">
+        <div class="header-greeting-block">
+          <h1 id="pageTitleHeading">Dashboard</h1>
+          <p id="pageSubtitleHeading">Welcome back, Manager! Here's what's happening today.</p>
+        </div>
+
+        <div class="header-actions-block">
+          <!-- Voice Audio Alert Toggle -->
+          <button class="header-pill-btn" id="testVoiceBtn" title="Test Hindi Speech Announcement">
+            <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+            <span>Test Voice</span>
+          </button>
+
+          <!-- Scan on Mobile Button -->
+          <button class="header-pill-btn" id="openMobileQrModalBtn" style="background: var(--primary-green); color: #FFFFFF; border-color: var(--primary-green);">
+            <i data-lucide="qr-code" style="width: 16px; height: 16px;"></i>
+            <span>Scan on Mobile</span>
+          </button>
+
+          <!-- Notification Bell -->
+          <button class="header-icon-btn" id="notifBellBtn" title="Recent Notifications">
+            <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+            <span class="notification-dot"></span>
+          </button>
+
+          <!-- Lock POS Screen Button -->
+          <button class="header-pill-btn" onclick="lockDashboard()" title="Lock Screen with PIN">
+            <i data-lucide="lock" style="width: 15px; height: 15px; color: #DC2626;"></i>
+            <span>Lock POS</span>
+          </button>
+
+          <!-- Settings Icon -->
+          <button class="header-icon-btn" id="settingsIconBtn" title="Preferences">
+            <i data-lucide="sliders" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <!-- Open Customer App -->
+          <a href="/order?table=2" target="_blank" class="header-pill-btn" style="text-decoration: none;">
+            <span>Customer View</span>
+            <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
+          </a>
+        </div>
+      </header>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 1: MAIN DASHBOARD OVERVIEW (EXACT REFERENCE 3 ROWS)
+      -------------------------------------------------------------------- -->
+      <section class="view-section view-active" id="view-dashboard">
+        
+        <!-- ROW 1: 3 STATISTICS CARDS -->
+        <div class="stats-cards-grid">
+          <!-- Card 1: Pending Orders -->
+          <div class="stat-card" onclick="switchNavView('orders')">
+            <div class="stat-card-top">
+              <div class="stat-icon-wrapper icon-pending">
+                <i data-lucide="clock" style="width: 22px; height: 22px;"></i>
+              </div>
+              <button class="stat-arrow-btn">
+                <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+            <div class="stat-card-bottom">
+              <div class="stat-number" id="statPendingOrders">0</div>
+              <div class="stat-title">Pending Orders</div>
+            </div>
+          </div>
+
+          <!-- Card 2: Orders in Progress -->
+          <div class="stat-card" onclick="switchNavView('kitchen')">
+            <div class="stat-card-top">
+              <div class="stat-icon-wrapper icon-progress">
+                <i data-lucide="flame" style="width: 22px; height: 22px;"></i>
+              </div>
+              <button class="stat-arrow-btn">
+                <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+            <div class="stat-card-bottom">
+              <div class="stat-number" id="statOrdersInProgress">0</div>
+              <div class="stat-title">Orders in Progress</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Available Tables -->
+          <div class="stat-card" onclick="switchNavView('tables')">
+            <div class="stat-card-top">
+              <div class="stat-icon-wrapper icon-tables">
+                <i data-lucide="check-circle-2" style="width: 22px; height: 22px;"></i>
+              </div>
+              <button class="stat-arrow-btn">
+                <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+            <div class="stat-card-bottom">
+              <div class="stat-number" id="statAvailableTables">12 / 12</div>
+              <div class="stat-title">Available Tables</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 2: TOTAL REVENUE (BAR CHART) & BUSINESS DATA (STACKED CARDS) -->
+        <div class="overview-middle-grid">
+          <!-- Left: Total Revenue Card with Weekly Bar Chart -->
+          <div class="revenue-chart-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Total Revenue</h3>
+              <div class="date-selector-pill">
+                <span>This Week</span>
+                <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+              </div>
+            </div>
+
+            <div class="revenue-meta-headline">
+              <div class="revenue-headline-amount" id="revenueHeadlineValue">₹24,850</div>
+              <div class="revenue-trend-badge">
+                <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i>
+                <span>+18.4% vs last week</span>
+              </div>
+            </div>
+
+            <!-- Weekly Bar Chart -->
+            <div class="chart-bars-container" id="revenueChartContainer">
+              <div class="chart-bar-column"><div class="bar-track" title="Mon: ₹2,400"><div class="bar-fill" style="height: 45%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Tue: ₹3,100"><div class="bar-fill" style="height: 60%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Wed: ₹2,800"><div class="bar-fill" style="height: 52%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Thu: ₹3,900"><div class="bar-fill" style="height: 75%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Fri: ₹4,800"><div class="bar-fill" style="height: 90%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Sat: ₹5,400"><div class="bar-fill" style="height: 100%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Sun: ₹4,200"><div class="bar-fill" style="height: 82%;"></div></div></div>
+            </div>
+
+            <div class="chart-x-labels">
+              <span class="chart-x-label">Mon</span>
+              <span class="chart-x-label">Tue</span>
+              <span class="chart-x-label">Wed</span>
+              <span class="chart-x-label">Thu</span>
+              <span class="chart-x-label">Fri</span>
+              <span class="chart-x-label">Sat</span>
+              <span class="chart-x-label">Sun</span>
+            </div>
+          </div>
+
+          <!-- Right: Business Data Card -->
+          <div class="business-data-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Business Data</h3>
+            </div>
+
+            <div class="business-cards-stack">
+              <div class="pastel-stat-card card-customers">
+                <div class="pastel-card-left">
+                  <div class="pastel-card-icon">
+                    <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div class="pastel-card-info">
+                    <span class="pastel-card-label">Number of Customers</span>
+                    <span class="pastel-card-value" id="statCustomersCount">142 Guests</span>
+                  </div>
+                </div>
+                <div class="revenue-trend-badge" style="background: rgba(22, 163, 106, 0.12);">
+                  +12.5%
+                </div>
+              </div>
+
+              <div class="pastel-stat-card card-orders">
+                <div class="pastel-card-left">
+                  <div class="pastel-card-icon">
+                    <i data-lucide="receipt" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div class="pastel-card-info">
+                    <span class="pastel-card-label">Total Orders</span>
+                    <span class="pastel-card-value" id="statTotalOrdersCount">48 Orders</span>
+                  </div>
+                </div>
+                <div class="revenue-trend-badge" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">
+                  +8.4%
+                </div>
+              </div>
+
+              <div class="pastel-stat-card card-aov">
+                <div class="pastel-card-left">
+                  <div class="pastel-card-icon">
+                    <i data-lucide="credit-card" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div class="pastel-card-info">
+                    <span class="pastel-card-label">Average Order Value</span>
+                    <span class="pastel-card-value" id="statAovValue">₹365 AOV</span>
+                  </div>
+                </div>
+                <div class="revenue-trend-badge" style="background: rgba(245, 158, 11, 0.12); color: #D97706;">
+                  +4.2%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 3: RECENT ACTIVITY AND TOP DISHES -->
+        <div class="overview-bottom-grid">
+          <div class="recent-activity-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Recent Activity</h3>
+              <button class="date-selector-pill" onclick="switchNavView('orders')">
+                <span>View All</span>
+                <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+              </button>
+            </div>
+            <div class="recent-activity-cards-stack" id="recentActivityList"></div>
+          </div>
+
+          <div class="top-dishes-card">
+            <div class="card-header-row">
+              <h3 class="card-title">Top Dishes</h3>
+              <button class="date-selector-pill" onclick="switchNavView('menus')">
+                <span>See All</span>
+                <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+              </button>
+            </div>
+            <div class="top-dishes-list" id="topDishesList"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 2: KITCHEN DISPLAY SYSTEM (LIVE KDS WITH HINDI VOICE ALERTS)
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-kitchen">
+        <div class="kds-filters-bar">
+          <div class="kds-tabs-group">
+            <button class="kds-filter-pill active" data-filter="active">
+              <span>All Active</span>
+              <span class="pill-counter" id="kdsBadgeActive">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="pending">
+              <span>New Incoming</span>
+              <span class="pill-counter" id="kdsBadgePending">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="preparing">
+              <span>In Kitchen</span>
+              <span class="pill-counter" id="kdsBadgeCooking">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="served">
+              <span>Ready & Served</span>
+              <span class="pill-counter" id="kdsBadgeServed">0</span>
+            </button>
+            <button class="kds-filter-pill" data-filter="completed">
+              <span>Completed</span>
+              <span class="pill-counter" id="kdsBadgeCompleted">0</span>
+            </button>
+          </div>
+
+          <div class="kds-tools-group">
+            <button class="btn-kds-tool btn-voice-active" id="kdsReplayVoiceBtn" title="Replay Hindi Voice Alert">
+              <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+              <span>Test Voice Alert</span>
+            </button>
+            <button class="btn-kds-tool" id="kdsMuteToggleBtn">
+              <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
+              <span id="kdsMuteStatusText">Sound On</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="kds-tickets-grid" id="kdsTicketsGrid"></div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 3: TABLES & QR CODES MANAGEMENT (WORKING 12 TABLES)
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-tables">
+        <div class="kds-filters-bar">
+          <div>
+            <h3 class="card-title">Restaurant Tables & Contactless QR Codes</h3>
+            <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+              Manage tables, check live occupancy, and print or download table QR standees.
+            </p>
+          </div>
+          <div class="kds-tools-group">
+            <a href="/qr-codes" target="_blank" class="btn-kds-primary" style="text-decoration: none;">
+              <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
+              <span>Print All 12 Standees</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Dynamic 12 Tables Grid -->
+        <div class="tables-grid" id="tablesManagementGrid"></div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 4: ORDERS LIST
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-orders">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">All Customer Orders</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Complete real-time order history and fulfillment statuses.
+              </p>
+            </div>
+          </div>
+          <div class="orders-saas-grid" id="allOrdersTableView"></div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 5: MENUS CATALOG
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-menus">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">Menu Catalog & Dish Pricing</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Artisanal cafe offerings, vegetarian indicators, and current rates.
+              </p>
+            </div>
+          </div>
+          <div class="activity-rows-list" id="menuManagementCatalog"></div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 6: ANALYTICS & INSIGHTS
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-analytics">
+        <div class="overview-middle-grid">
+          <div class="revenue-chart-card">
+            <h3 class="card-title" style="margin-bottom: 16px;">Daily Sales Trends</h3>
+            <p style="font-size: 13px; color: var(--secondary-text); margin-bottom: 20px;">
+              Hourly guest velocity and order volume distribution throughout the day.
+            </p>
+            <div class="revenue-meta-headline">
+              <div class="revenue-headline-amount">₹4,280 / Peak Hour</div>
+              <div class="revenue-trend-badge">+22.4% Weekend Surge</div>
+            </div>
+          </div>
+          <div class="business-data-card">
+            <h3 class="card-title" style="margin-bottom: 16px;">Category Contribution</h3>
+            <div class="business-cards-stack">
+              <div class="pastel-stat-card card-customers">
+                <span style="font-weight: 700;">Burgers & Sandwiches</span>
+                <span style="font-weight: 800; color: var(--primary-green);">54% of Sales</span>
+              </div>
+              <div class="pastel-stat-card card-orders">
+                <span style="font-weight: 700;">Brews & Shakes</span>
+                <span style="font-weight: 800; color: #2563EB;">28% of Sales</span>
+              </div>
+              <div class="pastel-stat-card card-aov">
+                <span style="font-weight: 700;">Pizzas & Desserts</span>
+                <span style="font-weight: 800; color: #D97706;">18% of Sales</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 7: HELP & QUICK GUIDE
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-help">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">Help & Restaurant Operations Guide</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Learn how the digital table QR and kitchen voice system works seamlessly.
+              </p>
+            </div>
+          </div>
+          <div style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div style="background: #FAFAFA; border: 1px solid #EAEAEA; border-radius: 10px; padding: 18px;">
+              <div style="font-size: 24px; margin-bottom: 8px;">📱</div>
+              <h4 style="font-size: 14px; font-weight: 800; color: #171717;">1. Table QR Ordering</h4>
+              <p style="font-size: 12px; color: #737373; margin-top: 6px; line-height: 1.6;">
+                Each table has a dedicated QR standee. When customers scan it using any mobile camera or Google Lens, the Luxury English Menu opens instantly for their specific table without downloading any apps.
+              </p>
+            </div>
+            <div style="background: #FAFAFA; border: 1px solid #EAEAEA; border-radius: 10px; padding: 18px;">
+              <div style="font-size: 24px; margin-bottom: 8px;">🔔</div>
+              <h4 style="font-size: 14px; font-weight: 800; color: #171717;">2. Kitchen Voice Alerts</h4>
+              <p style="font-size: 12px; color: #737373; margin-top: 6px; line-height: 1.6;">
+                Whenever a customer places an order, the system plays a dual-tone restaurant bell chime and speaks aloud in natural Hindi announcing the table number and dish items to your kitchen chefs.
+              </p>
+            </div>
+            <div style="background: #FAFAFA; border: 1px solid #EAEAEA; border-radius: 10px; padding: 18px;">
+              <div style="font-size: 24px; margin-bottom: 8px;">🖨️</div>
+              <h4 style="font-size: 14px; font-weight: 800; color: #171717;">3. Print Standees</h4>
+              <p style="font-size: 12px; color: #737373; margin-top: 6px; line-height: 1.6;">
+                Go to the "Tables & QR" tab and click "Print All Standees" to get high-resolution printable table cards for Tables 1 through 12.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 8: STORE SETTINGS
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-settings">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">Railway Style Hindi Announcement & Audio Configuration</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Inspired by Indian Railway Station announcements with Ding-Dong chime & automatic double repetition.
+              </p>
+            </div>
+            <button onclick="testVoiceAnnouncement()" class="btn-kds-primary" style="padding: 8px 16px;">
+              <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
+              <span>Test Double Announcement</span>
+            </button>
+          </div>
+          <div style="padding: 24px; max-width: 680px; display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- Voice Engine Selector -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Hindi Voice Engine</div>
+                <div style="font-size: 12px; color: #737373;">Auto-detects natural female Hindi neural voices (Google हिन्दी, Swara, Lekha)</div>
+              </div>
+              <select id="posVoiceSelect" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #D4D4D4; font-size: 13px; font-weight: 600; max-width: 260px; background: #FAFAFA; cursor: pointer;">
+                <option value="">Auto-Detect (Google हिन्दी / Neural)</option>
+              </select>
+            </div>
+
+            <!-- Announcement Repetition Mode -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Announcement Repetition</div>
+                <div style="font-size: 12px; color: #737373;">Single sound (plays once) or double sound (repeats twice)</div>
+              </div>
+              <select id="posRepetitionSelect" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #D4D4D4; font-size: 13px; font-weight: 600; background: #FAFAFA; cursor: pointer;">
+                <option value="false" selected>Single (1x - Plays Once)</option>
+                <option value="true">Double (2x - Repeats Twice)</option>
+              </select>
+            </div>
+
+            <!-- Speaking Speed (Cadence) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Announcement Speed</div>
+                <div style="font-size: 12px; color: #737373;">Slightly slower pace for crystal-clear station public address style</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" id="posSpeedRange" min="0.75" max="1.10" step="0.02" value="0.88" style="accent-color: #16A36A; cursor: pointer; width: 120px;">
+                <span id="speedValText" style="font-size: 13px; font-weight: 700; color: #171717; min-width: 45px;">0.88x</span>
+              </div>
+            </div>
+
+            <!-- Volume Level -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Announcement Volume</div>
+                <div style="font-size: 12px; color: #737373;">Optimized for laptop and external restaurant speakers</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" id="posVolumeRange" min="0.5" max="1.0" step="0.05" value="1.0" style="accent-color: #16A36A; cursor: pointer; width: 120px;">
+                <span id="volumeValText" style="font-size: 13px; font-weight: 700; color: #171717; min-width: 45px;">100%</span>
+              </div>
+            </div>
+
+            <!-- Manager Security PIN -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Manager Security PIN</div>
+                <div style="font-size: 12px; color: #737373;">4-digit PIN required to unlock this dashboard (Default: 1234)</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="password" id="managerPinInput" maxlength="4" placeholder="1234" style="width: 80px; padding: 6px 10px; border-radius: 6px; border: 1px solid #D4D4D4; text-align: center; font-size: 14px; font-weight: 800; letter-spacing: 2px;">
+                <button onclick="saveManagerPinFromSettings()" class="btn-kds-primary" style="padding: 6px 12px; font-size: 12px;">Save PIN</button>
+              </div>
+            </div>
+
+            <!-- Active Table Count -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Active Table Count</div>
+                <div style="font-size: 12px; color: #737373;">Number of dining tables configured with QR standees</div>
+              </div>
+              <span style="font-weight: 800; font-size: 14px; background: #FAFAFA; border: 1px solid #EAEAEA; padding: 6px 14px; border-radius: 6px;">12 Tables</span>
+            </div>
+
+            <!-- Real-time Sync Engine -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Real-Time Sync Engine</div>
+                <div style="font-size: 12px; color: #737373;">WebSocket + Smart Polling Auto-Sync</div>
+              </div>
+              <span style="font-size: 12px; font-weight: 700; color: #16A36A; background: rgba(22, 163, 106, 0.1); padding: 4px 10px; border-radius: 12px;">● Connected Live</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Guest Waiter/Service Request Popup Host -->
+  <div id="serviceAlertContainer"></div>
+
+  <!-- Mobile Scan Modal (Scan-Optimized with Big High-Contrast QR) -->
+  <div class="qr-modal-backdrop" id="mobileQrScanModal">
+    <div class="qr-modal-card">
+      <button class="qr-modal-close-btn" id="closeMobileQrModalBtn">✕</button>
+
+      <div style="font-size: 28px; margin-bottom: 6px;">📱</div>
+      <h3 class="qr-modal-title">Scan to Order on Mobile</h3>
+      <p class="qr-modal-subtitle">
+        Point your phone camera or Google Lens at this code to open the customer menu.
+      </p>
+
+      <!-- Table Selector -->
+      <div class="qr-table-selector-row">
+        <span>Select Table:</span>
+        <select class="qr-select-control" id="modalTableSelect">
+          <option value="1">Table 01</option>
+          <option value="2" selected>Table 02 (Recommended)</option>
+          <option value="3">Table 03</option>
+          <option value="4">Table 04</option>
+          <option value="5">Table 05</option>
+          <option value="6">Table 06</option>
+          <option value="7">Table 07</option>
+          <option value="8">Table 08</option>
+          <option value="9">Table 09</option>
+          <option value="10">Table 10</option>
+          <option value="11">Table 11</option>
+          <option value="12">Table 12</option>
+        </select>
+      </div>
+
+      <!-- High Contrast Big QR Frame -->
+      <div class="qr-big-frame" style="display: flex; justify-content: center; align-items: center; min-height: 230px;">
+        <div id="modalQrContainer" class="qr-big-canvas"></div>
+      </div>
+
+      <div class="qr-scan-instruction-box">
+        ✓ Works on any iPhone Camera & Android QR Scanner
+      </div>
+
+      <!-- Live Link Box -->
+      <div class="qr-modal-link-box">
+        <span id="modalQrLinkText" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Loading link...</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="qr-modal-actions-row">
+        <button class="btn-qr-modal-copy" id="modalCopyLinkBtn">
+          <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+          <span id="copyLinkBtnText">Copy Link</span>
+        </button>
+        <a href="#" target="_blank" class="btn-qr-modal-open" id="modalOpenDirectBtn">
+          <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+          <span>Open Direct</span>
+        </a>
       </div>
     </div>
   </div>
 
-  <!-- Search Input -->
-  <section class="search-wrapper">
-    <div class="search-field">
-      <svg class="search-icon-svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" id="dishSearchInput" placeholder="Search dishes, coffee, sandwiches...">
-    </div>
-  </section>
-
-  <!-- Categories Horizontal Navigation -->
-  <nav class="categories-container" id="categoriesNav">
-    <button class="tab-pill active" data-category="all">All Items</button>
-    <button class="tab-pill" data-category="burgers">Burgers</button>
-    <button class="tab-pill" data-category="sandwiches">Sandwiches</button>
-    <button class="tab-pill" data-category="pizza_fries">Pizza & Sides</button>
-    <button class="tab-pill" data-category="drinks">Coffee & Shakes</button>
-    <button class="tab-pill" data-category="desserts">Desserts</button>
-  </nav>
-
-  <!-- Main Dishes Catalog -->
-  <main class="menu-catalog">
-    <div class="catalog-header">
-      <h2 class="catalog-title" id="categoryHeading">Featured Creations</h2>
-      <span class="catalog-meta" id="itemsCountBadge">14 curated items</span>
-    </div>
-
-    <div class="catalog-grid" id="dishesContainer">
-      <!-- Dish cards dynamically injected via customer.js -->
-    </div>
-  </main>
-
-  <!-- Floating Checkout Dock -->
-  <div class="bottom-cart-dock" id="cartFloatingBar">
-    <div class="cart-dock-info">
-      <div class="cart-dock-badge"><span id="cartTotalQty">0</span> items selected</div>
-      <div class="cart-dock-price" id="cartTotalPrice">₹0</div>
-    </div>
-    <button class="btn-dock-checkout" id="openCartBtn">
-      View Order <span>→</span>
-    </button>
-  </div>
-
-  <!-- Cart & Checkout Modal Bottom Sheet -->
-  <div class="drawer-backdrop" id="cartModalOverlay">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h3 class="drawer-headline">Your Order Summary</h3>
-        <button class="btn-close-drawer" id="closeCartBtn">✕</button>
-      </div>
-
-      <div style="background: var(--bg-muted); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);" id="cartTableIndicator">Table 02</span>
-        <span style="font-size: 11px; font-weight: 600; color: #16a34a; letter-spacing: 0.05em; text-transform: uppercase;">● QR Dine-In Verified</span>
+  <!-- Order Details Modal (Pop-up on Order Card / Activity Click) -->
+  <div class="order-modal-backdrop" id="orderDetailsModal" onclick="closeOrderDetailsModal()">
+    <div class="order-modal-sheet" onclick="event.stopPropagation()">
+      <div class="order-modal-top-bar">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 id="modalOrderHeadline" style="font-size: 18px; font-weight: 800; color: #111827; margin: 0;">Order Details</h3>
+            <span id="modalOrderTablePill" class="order-table-pill">Table --</span>
+          </div>
+          <p id="modalOrderMetaSubtitle" style="font-size: 12px; color: #6B7280; margin: 3px 0 0 0;">Created at --</p>
+        </div>
+        <button onclick="closeOrderDetailsModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #6B7280; padding: 4px;">✕</button>
       </div>
 
       <!-- Items List -->
-      <div class="order-items-list" id="cartItemsList">
-        <!-- Injected via JS -->
+      <div style="padding: 16px 0;">
+        <div style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Ordered Items</div>
+        <div id="modalOrderItemsContainer" style="display: flex; flex-direction: column; gap: 4px;"></div>
       </div>
 
-      <!-- Cooking Notes -->
-      <div>
-        <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block;">
-          Special Kitchen Instructions (Optional)
-        </label>
-        <input type="text" id="specialNoteInput" class="notes-input-box" placeholder="e.g. Less spicy, crispy bread, no onion, extra cheese...">
+      <!-- Special Note -->
+      <div id="modalOrderNoteBox" style="display: none; background: #FFFBEB; border: 1px dashed #FDE68A; padding: 10px 14px; border-radius: 8px; font-size: 12px; color: #B45309; margin-bottom: 16px;">
+        <strong>Special Instructions:</strong> <span id="modalOrderNoteText"></span>
       </div>
 
-      <!-- Bill Breakdown -->
-      <div class="bill-summary-box">
-        <div class="bill-entry">
-          <span>Subtotal</span>
-          <span id="billSubtotal">₹0</span>
-        </div>
-        <div class="bill-entry">
-          <span>Taxes & Service (5%)</span>
-          <span id="billGst">₹0</span>
-        </div>
-        <div class="bill-entry grand-total">
-          <span>Total Payable Amount</span>
-          <span id="billGrandTotal">₹0</span>
-        </div>
+      <!-- Bill Total Row -->
+      <div style="background: #F9FAFB; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <span style="font-size: 14px; font-weight: 700; color: #4B5563;">Total Bill Amount</span>
+        <span id="modalOrderTotalFigure" style="font-size: 20px; font-weight: 800; color: #16A36A;">₹0</span>
       </div>
 
-      <!-- Confirm Order Button -->
-      <button class="btn-confirm-order" id="confirmOrderBtn">
-        Confirm & Send to Kitchen <span>→</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Live Order Tracking Drawer -->
-  <div class="drawer-backdrop" id="statusModalOverlay">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h3 class="drawer-headline">Live Order Tracker</h3>
-        <button class="btn-close-drawer" id="closeStatusBtn">✕</button>
-      </div>
-
-      <div style="text-align: center; margin: 12px 0 20px;">
-        <div style="font-size: 42px; margin-bottom: 8px;" id="statusEmoji">👨‍🍳</div>
-        <h2 style="font-size: 19px; font-weight: 800; color: var(--accent-dark);" id="statusTitle">Order Being Prepared</h2>
-        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" id="statusSubtitle">Our chef has received your order and is preparing it fresh.</p>
-        <div style="margin-top: 10px; font-size: 12px; font-weight: 700; color: #71717a;" id="statusOrderIdTag">ORDER #ORD-123456</div>
-      </div>
-
-      <!-- Elegant Stepper -->
-      <div class="progress-stepper">
-        <div class="stepper-node done" id="step1">
-          <div class="stepper-dot">✓</div>
-          <div class="stepper-info">
-            <h4>Order Received</h4>
-            <p>Order sent directly to the kitchen display</p>
-          </div>
-        </div>
-        <div class="stepper-node current" id="step2">
-          <div class="stepper-dot">2</div>
-          <div class="stepper-info">
-            <h4>Kitchen Cooking</h4>
-            <p>Your meal is currently being freshly prepared</p>
-          </div>
-        </div>
-        <div class="stepper-node" id="step3">
-          <div class="stepper-dot">3</div>
-          <div class="stepper-info">
-            <h4>Ready & Served</h4>
-            <p>Delivered fresh to your table</p>
-          </div>
-        </div>
-      </div>
-
-      <div style="background: var(--bg-muted); border-radius: var(--radius-sm); padding: 14px; margin-top: 12px;">
-        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px;">Order Details</h4>
-        <div id="statusItemsSummary" style="font-size: 13px; color: var(--text-primary); line-height: 1.6;">
-          <!-- Items summary -->
-        </div>
-      </div>
-
-      <button style="margin-top: 18px; width: 100%; padding: 13px; background: var(--bg-muted); border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer;" id="statusCloseActionBtn">
-        Back to Menu
-      </button>
-    </div>
-  </div>
-
-  <!-- Table Selection Fallback Modal -->
-  <div class="drawer-backdrop" id="tableSelectModal">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h3 class="drawer-headline">Select Table Number</h3>
-      </div>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
-        Please select your table number so the kitchen team delivers your order accurately:
-      </p>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;" id="tableGridContainer">
-        <!-- 1 to 12 buttons -->
+      <!-- Modal Action Buttons -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button id="modalOrderVoiceBtn" class="btn-kds-secondary" style="flex: 1; min-width: 140px; justify-content: center; padding: 10px 14px;">
+          <i data-lucide="volume-2" style="width: 15px; height: 15px;"></i>
+          <span>Voice Announcement</span>
+        </button>
+        <button onclick="closeOrderDetailsModal()" class="btn-kds-primary" style="flex: 1; min-width: 100px; justify-content: center; padding: 10px 14px;">
+          <span>Close</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Customer Footer (Pure Guest Experience, No Staff/Dashboard Links) -->
-  <footer style="text-align: center; padding: 24px 16px 90px; font-size: 12px; color: #a1a1aa;">
-    <div>Artisanal Dining Experience &copy; 2026 The Royal Cafe</div>
-    <div style="margin-top: 4px; font-size: 11px; color: #71717a;">Freshly prepared with love &amp; premium ingredients</div>
-  </footer>
+  <!-- Fullscreen PIN Lock Screen Overlay -->
+  <div id="dashboardPinLockOverlay" class="pin-lock-overlay">
+    <div class="pin-lock-modal">
+      <div class="pin-brand-header">
+        <div class="pin-brand-icon">☕</div>
+        <h2 class="pin-title">The Royal Cafe</h2>
+        <p class="pin-subtitle">Manager &amp; Kitchen Staff Authorization</p>
+      </div>
 
-  <!-- Toast Notification -->
-  <div id="toastNotification">
-    <span id="toastIcon">✨</span> <span id="toastMessage">Item added</span>
+      <!-- PIN Visual Dots -->
+      <div class="pin-dots-row" id="pinDotsRow">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+
+      <div id="pinErrorMessage" class="pin-error-text" style="display: none;">
+        Incorrect PIN. Please try again.
+      </div>
+
+      <!-- Keypad -->
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="enterPinDigit('1')">1</button>
+        <button class="pin-key" onclick="enterPinDigit('2')">2</button>
+        <button class="pin-key" onclick="enterPinDigit('3')">3</button>
+        <button class="pin-key" onclick="enterPinDigit('4')">4</button>
+        <button class="pin-key" onclick="enterPinDigit('5')">5</button>
+        <button class="pin-key" onclick="enterPinDigit('6')">6</button>
+        <button class="pin-key" onclick="enterPinDigit('7')">7</button>
+        <button class="pin-key" onclick="enterPinDigit('8')">8</button>
+        <button class="pin-key" onclick="enterPinDigit('9')">9</button>
+        <button class="pin-key pin-key-fn" onclick="clearPin()">C</button>
+        <button class="pin-key" onclick="enterPinDigit('0')">0</button>
+        <button class="pin-key pin-key-fn" onclick="deletePinDigit()">⌫</button>
+      </div>
+
+      <div class="pin-footer-hint">
+        Default Manager PIN is <strong>1234</strong>
+      </div>
+    </div>
   </div>
 
+  <!-- Scripts: Local bundled vendor files -->
   <script src="/vendor/socket.io.min.js"></script>
-  <script src="/customer.js"></script>
+  <script src="/kitchen.js"></script>
 </body>
 </html>
