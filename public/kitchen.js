@@ -42,19 +42,59 @@ if (posAudioChannel) {
   };
 }
 
+let isAudioFullyUnlocked = false;
+
 function initAudio() {
-  if (!audioContext) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) audioContext = new AudioCtx();
-  }
-  if (audioContext && audioContext.state === 'suspended') {
-    audioContext.resume();
-  }
+  try {
+    if (!audioContext) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) audioContext = new AudioCtx();
+    }
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    if (audioContext && !isAudioFullyUnlocked) {
+      try {
+        const buffer = audioContext.createBuffer(1, 1, 22050);
+        const src = audioContext.createBufferSource();
+        src.buffer = buffer;
+        src.connect(audioContext.destination);
+        src.start(0);
+      } catch (e) {}
+    }
 
-  const ribbon = document.getElementById('audioBanner');
-  if (ribbon) ribbon.style.display = 'none';
+    // HTML5 Audio unlock (primes browser for background audio playback)
+    try {
+      const silent = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      silent.volume = 0.01;
+      silent.play().catch(() => {});
+    } catch (e) {}
 
-  localStorage.setItem('pos_audio_unlocked', 'true');
+    // Speech synthesis unlock (primes browser SpeechSynthesis queue)
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.resume();
+        const silentUtterance = new SpeechSynthesisUtterance(' ');
+        silentUtterance.volume = 0;
+        window.speechSynthesis.speak(silentUtterance);
+      } catch (e) {}
+    }
+
+    isAudioFullyUnlocked = true;
+    localStorage.setItem('pos_audio_unlocked', 'true');
+
+    const ribbon = document.getElementById('audioBanner');
+    if (ribbon) ribbon.style.display = 'none';
+  } catch (err) {
+    console.warn('initAudio unlock issue:', err);
+  }
+}
+
+// Global user gesture listeners: ANY user click or keypress unlocks all audio instantly
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', initAudio, { passive: true });
+  document.addEventListener('touchstart', initAudio, { passive: true });
+  window.addEventListener('keydown', initAudio, { passive: true });
 }
 
 /**
@@ -418,25 +458,37 @@ function speakHindiUtterance(text) {
 }
 
 function playAudioElement(audio) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let finished = false;
-    const done = () => {
+    const cleanup = () => {
+      finished = true;
+      if (timer) clearTimeout(timer);
+    };
+    audio.onended = () => {
       if (!finished) {
-        finished = true;
+        cleanup();
         resolve();
       }
     };
-    audio.onended = done;
     audio.onerror = (e) => {
-      console.warn('Audio playback error:', e);
-      done();
+      if (!finished) {
+        cleanup();
+        reject(e || new Error('Audio element error'));
+      }
     };
     // 45s safety timeout
-    const timer = setTimeout(done, 45000);
-    audio.play().then(() => {}).catch(err => {
-      console.warn('Audio play() error:', err);
-      clearTimeout(timer);
-      done();
+    const timer = setTimeout(() => {
+      if (!finished) {
+        cleanup();
+        resolve();
+      }
+    }, 45000);
+
+    audio.play().catch(err => {
+      if (!finished) {
+        cleanup();
+        reject(err);
+      }
     });
   });
 }
@@ -1941,6 +1993,7 @@ function updatePinDotsUI() {
 }
 
 function enterPinDigit(digit) {
+  initAudio();
   if (currentPinInput.length >= 4) return;
   currentPinInput += digit;
   updatePinDotsUI();
@@ -1949,7 +2002,7 @@ function enterPinDigit(digit) {
   if (errEl) errEl.style.display = 'none';
 
   if (currentPinInput.length === 4) {
-    setTimeout(verifyPinInput, 150);
+    verifyPinInput();
   }
 }
 
