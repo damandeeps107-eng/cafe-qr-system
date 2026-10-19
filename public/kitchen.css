@@ -2337,4 +2337,133 @@ body {
   color: #94a3b8;
 }
 
+/* -------------------------------------------------------------------------
+   10. ORDER STATUS ACTION BUTTONS (APPROVE, COOK, SERVED, COMPLETE)
+------------------------------------------------------------------------- */
+.btn-action-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-status-start {
+  background: #16a36a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(22, 163, 106, 0.25);
+}
+
+.btn-status-start:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.btn-status-served {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.btn-status-served:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-status-complete {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+
+.btn-status-complete:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.badge-status-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Modal Status Action Buttons */
+.modal-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.btn-modal-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-modal-status:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.btn-modal-status.active-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
+}
+
+.btn-modal-status.active-preparing {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #3b82f6;
+}
+
+.btn-modal-status.active-served {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border-color: #a855f7;
+}
+
+.btn-modal-status.active-completed {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #10b981;
+}
+
+.btn-modal-status-submit {
+  background: #16a36a;
+  color: #ffffff;
+  border-color: #16a36a;
+  box-shadow: 0 4px 10px rgba(22, 163, 106, 0.25);
+}
+
+.btn-modal-status-submit:hover {
+  background: #15803d;
+  color: #ffffff;
+}
+
 

@@ -757,6 +757,16 @@
         <strong>Special Instructions:</strong> <span id="modalOrderNoteText"></span>
       </div>
 
+      <!-- Live Status Action Bar (Restaurant Kitchen Controls) -->
+      <div style="background: #FFFFFF; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 11px; font-weight: 700; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Live Kitchen Status & Tracking</span>
+          <span id="modalCurrentStatusBadge" style="font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #FEF3C7; color: #92400e;">Pending</span>
+        </div>
+        <p style="font-size: 12px; color: #6B7280; margin: 0 0 10px 0;">Click to update order stage — instantly updates customer's phone screen:</p>
+        <div id="modalOrderStatusControls" class="modal-status-grid"></div>
+      </div>
+
       <!-- Bill Total Row -->
       <div style="background: #F9FAFB; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <span style="font-size: 14px; font-weight: 700; color: #4B5563;">Total Bill Amount</span>

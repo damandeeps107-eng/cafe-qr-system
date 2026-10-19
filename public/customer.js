@@ -467,6 +467,26 @@ if (socket) {
   });
 }
 
+// Instant cross-tab real-time tracking updates (0.001s)
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  try {
+    const liveCh = new BroadcastChannel('pos_live_orders');
+    liveCh.onmessage = (event) => {
+      if (event.data && event.data.type === 'ORDER_STATUS_UPDATED' && event.data.order) {
+        const updated = event.data.order;
+        if (activeOrder && activeOrder.id === updated.id) {
+          activeOrder = updated;
+          updateActiveOrderBanner();
+          if (document.getElementById('statusModalOverlay')?.classList.contains('open')) {
+            openStatusModal(activeOrder);
+          }
+          showToast(`Order status: ${updated.status.toUpperCase()}`, '🔔');
+        }
+      }
+    };
+  } catch (e) {}
+}
+
 // Expose global functions on window for inline onclicks
 window.addToCart = addToCart;
 window.changeQty = changeQty;

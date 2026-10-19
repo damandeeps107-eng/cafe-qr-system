@@ -1114,6 +1114,40 @@ function openOrderDetailsModal(orderId) {
   const totalFigure = document.getElementById('modalOrderTotalFigure');
   if (totalFigure) totalFigure.innerText = `₹${order.totalAmount}`;
 
+  const statusBadge = document.getElementById('modalCurrentStatusBadge');
+  if (statusBadge) {
+    const s = order.status || 'pending';
+    let label = 'Pending Approval';
+    let bg = '#FEF3C7';
+    let col = '#92400e';
+    if (s === 'preparing') { label = 'Cooking in Kitchen'; bg = '#EFF6FF'; col = '#1D4ED8'; }
+    else if (s === 'served') { label = 'Food Served'; bg = '#F3E8FF'; col = '#7E22CE'; }
+    else if (s === 'completed') { label = 'Completed / Paid'; bg = '#ECFDF5'; col = '#047857'; }
+    else if (s === 'cancelled') { label = 'Cancelled'; bg = '#FEE2E2'; col = '#B91C1C'; }
+    statusBadge.innerText = label;
+    statusBadge.style.background = bg;
+    statusBadge.style.color = col;
+  }
+
+  const controlsContainer = document.getElementById('modalOrderStatusControls');
+  if (controlsContainer) {
+    const s = order.status || 'pending';
+    controlsContainer.innerHTML = `
+      <button class="btn-modal-status ${s === 'pending' ? 'active-pending' : ''}" onclick="updateOrderStatus('${order.id}', 'pending'); openOrderDetailsModal('${order.id}')">
+        <span>🟡 Received</span>
+      </button>
+      <button class="btn-modal-status ${s === 'preparing' ? 'active-preparing' : ''}" onclick="updateOrderStatus('${order.id}', 'preparing'); openOrderDetailsModal('${order.id}')">
+        <span>🔥 Start Cooking</span>
+      </button>
+      <button class="btn-modal-status ${s === 'served' ? 'active-served' : ''}" onclick="updateOrderStatus('${order.id}', 'served'); openOrderDetailsModal('${order.id}')">
+        <span>🍽️ Mark Served</span>
+      </button>
+      <button class="btn-modal-status ${s === 'completed' ? 'active-completed' : ''}" onclick="updateOrderStatus('${order.id}', 'completed'); openOrderDetailsModal('${order.id}')">
+        <span>✅ Complete Order</span>
+      </button>
+    `;
+  }
+
   const voiceBtn = document.getElementById('modalOrderVoiceBtn');
   if (voiceBtn) {
     voiceBtn.onclick = () => replayOrderVoice(order.id);
@@ -1391,7 +1425,14 @@ async function updateOrderStatus(orderId, newStatus) {
       const idx = orders.findIndex(o => o.id === orderId);
       if (idx !== -1) orders[idx] = updated;
 
-      showToast(`Order status updated to ${newStatus}`, '✓');
+      try {
+        if ('BroadcastChannel' in window) {
+          const ch = new BroadcastChannel('pos_live_orders');
+          ch.postMessage({ type: 'ORDER_STATUS_UPDATED', order: updated });
+        }
+      } catch (e) {}
+
+      showToast(`Order #${orderId} marked as ${newStatus}`, '✓');
       renderDashboardOverview();
       renderKdsTickets();
       renderTablesManagement();
@@ -1647,11 +1688,29 @@ function renderAllOrdersView() {
           </div>
 
           <div class="order-footer-actions">
+            ${
+              order.status === 'pending'
+                ? `<button class="btn-action-status btn-status-start" title="Approve and start cooking" onclick="event.stopPropagation(); updateOrderStatus('${order.id}', 'preparing')">
+                    <i data-lucide="flame" style="width: 13px; height: 13px;"></i>
+                    <span>Approve &amp; Cook</span>
+                  </button>`
+                : order.status === 'preparing'
+                ? `<button class="btn-action-status btn-status-served" title="Mark food served at table" onclick="event.stopPropagation(); updateOrderStatus('${order.id}', 'served')">
+                    <i data-lucide="check" style="width: 13px; height: 13px;"></i>
+                    <span>Mark Served</span>
+                  </button>`
+                : order.status === 'served'
+                ? `<button class="btn-action-status btn-status-complete" title="Complete order" onclick="event.stopPropagation(); updateOrderStatus('${order.id}', 'completed')">
+                    <i data-lucide="check-circle" style="width: 13px; height: 13px;"></i>
+                    <span>Complete</span>
+                  </button>`
+                : `<span class="badge-status-done"><i data-lucide="check-check" style="width: 12px; height: 12px;"></i> Done</span>`
+            }
             <button class="btn-order-voice-icon" title="Listen voice announcement" onclick="event.stopPropagation(); replayOrderVoice('${order.id}')">
               <i data-lucide="volume-2" style="width: 15px; height: 15px;"></i>
             </button>
             <button class="btn-order-view-details" onclick="event.stopPropagation(); openOrderDetailsModal('${order.id}')">
-              <span>View Details</span>
+              <span>Details</span>
               <i data-lucide="chevron-right" style="width: 13px; height: 13px;"></i>
             </button>
           </div>
