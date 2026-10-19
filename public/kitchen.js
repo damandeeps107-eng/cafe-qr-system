@@ -1,4 +1,4 @@
-// Reference Restaurant Management Dashboard & Live Kitchen Engine with Hindi Voice Alerts
+// Reference Restaurant Management Dashboard & Live Kitchen Engine with Professional POS Voice Notifications
 let socket = null;
 try {
   if (typeof io === 'function') {
@@ -23,7 +23,7 @@ let manualOccupiedTables = new Set();
 let baseUrl = window.location.origin;
 
 // -----------------------------------------------------------------------------
-// 1. AUDIO CHIME & HINDI TEXT-TO-SPEECH ENGINE
+// 1. PROFESSIONAL RESTAURANT POS BELL CHIME & NATURAL FEMALE VOICE ENGINE
 // -----------------------------------------------------------------------------
 function initAudio() {
   if (!audioContext) {
@@ -36,55 +36,83 @@ function initAudio() {
 
   const ribbon = document.getElementById('audioBanner');
   if (ribbon) ribbon.style.display = 'none';
+
+  localStorage.setItem('pos_audio_unlocked', 'true');
 }
 
-function playBellChime() {
+/**
+ * Modern 3-Tone Restaurant POS Chime (Harmonic Acoustic Chime)
+ * Note 1: C6 (1046.5 Hz) -> Note 2: E6 (1318.5 Hz) -> Note 3: G6 (1567.98 Hz)
+ */
+function playPosChime() {
   if (isMuted) return Promise.resolve();
   try {
     initAudio();
     if (!audioContext) return Promise.resolve();
     const now = audioContext.currentTime;
 
-    // Tone 1: High frequency chime (E5)
+    // Note 1: C6 (1046.5 Hz) - bright entrance
     const osc1 = audioContext.createOscillator();
     const gain1 = audioContext.createGain();
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(659.25, now);
-
-    gain1.gain.setValueAtTime(0.35, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-
+    osc1.frequency.setValueAtTime(1046.5, now);
+    gain1.gain.setValueAtTime(0.38, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
     osc1.connect(gain1);
     gain1.connect(audioContext.destination);
-
     osc1.start(now);
-    osc1.stop(now + 0.6);
+    osc1.stop(now + 0.3);
 
-    // Tone 2: Harmonious chime (A5)
+    // Note 2: E6 (1318.5 Hz) - warm major harmonic
     const osc2 = audioContext.createOscillator();
     const gain2 = audioContext.createGain();
     osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(880.00, now + 0.15);
-
-    gain2.gain.setValueAtTime(0.3, now + 0.15);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
-
+    osc2.frequency.setValueAtTime(1318.5, now + 0.09);
+    gain2.gain.setValueAtTime(0.42, now + 0.09);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
     osc2.connect(gain2);
     gain2.connect(audioContext.destination);
+    osc2.start(now + 0.09);
+    osc2.stop(now + 0.42);
 
-    osc2.start(now + 0.15);
-    osc2.stop(now + 0.9);
+    // Note 3: G6 (1567.98 Hz) - bell resolution with extended acoustic decay
+    const osc3 = audioContext.createOscillator();
+    const gain3 = audioContext.createGain();
+    osc3.type = 'triangle';
+    osc3.frequency.setValueAtTime(1567.98, now + 0.18);
+    gain3.gain.setValueAtTime(0.48, now + 0.18);
+    gain3.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+    osc3.connect(gain3);
+    gain3.connect(audioContext.destination);
+    osc3.start(now + 0.18);
+    osc3.stop(now + 0.85);
 
-    return new Promise(resolve => setTimeout(resolve, 800));
+    // Subtle overtone (3135 Hz) for crispness
+    const oscOver = audioContext.createOscillator();
+    const gainOver = audioContext.createGain();
+    oscOver.type = 'sine';
+    oscOver.frequency.setValueAtTime(3135.96, now + 0.18);
+    gainOver.gain.setValueAtTime(0.12, now + 0.18);
+    gainOver.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+    oscOver.connect(gainOver);
+    gainOver.connect(audioContext.destination);
+    oscOver.start(now + 0.18);
+    oscOver.stop(now + 0.55);
+
+    return new Promise(resolve => setTimeout(resolve, 650));
   } catch (e) {
-    console.warn('Audio chime playback issue:', e);
+    console.warn('POS Chime playback issue:', e);
     return Promise.resolve();
   }
 }
 
+/**
+ * Intelligent Natural Female Indian English Voice Selector
+ */
 function loadVoices() {
   if (!('speechSynthesis' in window)) return;
   availableVoices = window.speechSynthesis.getVoices();
+  populateVoiceSelectDropdown();
 }
 
 if ('speechSynthesis' in window) {
@@ -92,65 +120,208 @@ if ('speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-async function speakHindiText(hindiText, romanFallbackText = '') {
+function getBestNaturalFemaleVoice() {
+  if (!availableVoices || availableVoices.length === 0) {
+    if ('speechSynthesis' in window) {
+      availableVoices = window.speechSynthesis.getVoices();
+    }
+  }
+
+  // 1. Check user-saved custom selection
+  const savedURI = localStorage.getItem('pos_selected_voice_uri');
+  if (savedURI && availableVoices && availableVoices.length > 0) {
+    const saved = availableVoices.find(v => v.voiceURI === savedURI || v.name === savedURI);
+    if (saved) return saved;
+  }
+
+  if (!availableVoices || availableVoices.length === 0) return null;
+
+  // 2. Score voices according to natural Indian English female criteria
+  function scoreVoice(voice) {
+    const name = (voice.name || '').toLowerCase();
+    const lang = (voice.lang || '').toLowerCase().replace(/_/g, '-');
+    let score = 0;
+
+    const isIndian = lang.includes('en-in') || lang.includes('hi-in');
+    const isFemale = name.includes('female') || name.includes('tara') || name.includes('heera') ||
+                     name.includes('neerja') || name.includes('veena') || name.includes('kajal') ||
+                     name.includes('raveena') || name.includes('lekha') || name.includes('siri') ||
+                     name.includes('samantha') || name.includes('karen') || name.includes('victoria') ||
+                     name.includes('zira') || name.includes('jenny') || name.includes('aria') ||
+                     name.includes('priya') || name.includes('swara') || name.includes('pooja');
+
+    const isNatural = name.includes('natural') || name.includes('online') || name.includes('neural') || name.includes('google');
+
+    // Tier 1: Natural Female Indian English (e.g., Heera Natural, Tara, Neerja, Google Indian English Female)
+    if (isIndian && isFemale && isNatural) score += 1000;
+    else if (isIndian && isFemale) score += 800;
+    else if (isIndian) score += 500;
+
+    // Tier 2: Natural Female English (e.g., Google UK English Female, Jenny, Samantha)
+    if (!isIndian && isFemale && isNatural) score += 400;
+    else if (!isIndian && isFemale) score += 300;
+
+    // Tier 3: Any English
+    if (lang.startsWith('en')) score += 100;
+
+    return score;
+  }
+
+  const sorted = [...availableVoices].sort((a, b) => scoreVoice(b) - scoreVoice(a));
+  return sorted[0] || null;
+}
+
+function populateVoiceSelectDropdown() {
+  const select = document.getElementById('posVoiceSelect');
+  if (!select) return;
+
+  select.innerHTML = '';
+  const best = getBestNaturalFemaleVoice();
+  const savedURI = localStorage.getItem('pos_selected_voice_uri');
+
+  // Option: Auto-Detect
+  const autoOpt = document.createElement('option');
+  autoOpt.value = '';
+  autoOpt.innerText = `Auto-Detect (Recommended: ${best ? best.name : 'Natural Female'})`;
+  if (!savedURI) autoOpt.selected = true;
+  select.appendChild(autoOpt);
+
+  availableVoices.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.voiceURI || v.name;
+    const isInd = v.lang.toLowerCase().includes('in');
+    opt.innerText = `${v.name} (${v.lang})${isInd ? ' 🇮🇳' : ''}`;
+    if (savedURI && (v.voiceURI === savedURI || v.name === savedURI)) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+}
+
+/**
+ * Text Transformation Helpers for Natural Speaking Delivery
+ */
+function numberToWord(num) {
+  const map = {
+    1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
+    6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
+    11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen',
+    15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen',
+    19: 'nineteen', 20: 'twenty'
+  };
+  return map[num] || num.toString();
+}
+
+function capitalize(text) {
+  if (!text) return '';
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * Builds the exact reference announcement format:
+ * "New order received! Table number five. Two Chilli Paneer, one Veg Burger, and one Cold Coffee."
+ */
+function buildPosOrderAnnouncement(order) {
+  const tableWord = numberToWord(order.tableNo);
+
+  if (!order.items || order.items.length === 0) {
+    return `New order received! Table number ${tableWord}.`;
+  }
+
+  const itemsList = order.items.map(item => {
+    const qtyWord = numberToWord(item.qty);
+    const cleanName = (item.name || '').replace(/\(.*\)/g, '').trim();
+    return `${qtyWord} ${cleanName}`;
+  });
+
+  let itemsPhrase = '';
+  if (itemsList.length === 1) {
+    itemsPhrase = capitalize(itemsList[0]);
+  } else if (itemsList.length === 2) {
+    itemsPhrase = `${capitalize(itemsList[0])} and ${itemsList[1]}`;
+  } else {
+    const lastItem = itemsList.pop();
+    itemsPhrase = `${capitalize(itemsList.join(', '))}, and ${lastItem}`;
+  }
+
+  return `New order received! Table number ${tableWord}. ${itemsPhrase}.`;
+}
+
+/**
+ * Sequential Speech Queue System to avoid overlapping announcements
+ */
+function announceNewOrder(order) {
   if (isMuted) return;
-  if (!('speechSynthesis' in window)) return;
 
-  await playBellChime();
-
-  speechQueue.push({ hindiText, romanFallbackText });
+  const announcementText = buildPosOrderAnnouncement(order);
+  speechQueue.push(announcementText);
   processSpeechQueue();
 }
 
-function processSpeechQueue() {
+async function processSpeechQueue() {
   if (isSpeaking || speechQueue.length === 0) return;
+  if (!('speechSynthesis' in window)) return;
 
   isSpeaking = true;
-  const { hindiText, romanFallbackText } = speechQueue.shift();
+  const textToSpeak = speechQueue.shift();
+
+  // 1. Play pleasant POS notification chime
+  await playPosChime();
+
+  // 2. Breath pause between chime and spoken words
+  await new Promise(r => setTimeout(r, 120));
 
   window.speechSynthesis.cancel();
 
-  // Find Hindi voice
-  let voice = availableVoices.find(v => v.lang && (v.lang.toLowerCase().includes('hi') || v.name.toLowerCase().includes('hindi')));
-  let textToSpeak = hindiText;
-
-  if (!voice) {
-    // Indian English voice fallback
-    voice = availableVoices.find(v => v.lang && (v.lang.toLowerCase().includes('en-in') || v.lang.toLowerCase().includes('in')));
-  }
-
-  if (!voice && availableVoices.length > 0) {
-    voice = availableVoices[0];
-    if (romanFallbackText) textToSpeak = romanFallbackText;
-  }
-
   const utterance = new SpeechSynthesisUtterance(textToSpeak);
-  if (voice) utterance.voice = voice;
-  utterance.lang = voice ? voice.lang : 'hi-IN';
-  utterance.rate = 0.95;
-  utterance.pitch = 1.05;
+  const voice = getBestNaturalFemaleVoice();
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang || 'en-IN';
+  } else {
+    utterance.lang = 'en-IN';
+  }
+
+  // Smooth, slightly energetic POS delivery tempo
+  const speed = parseFloat(localStorage.getItem('pos_voice_rate') || '1.02');
+  const pitch = parseFloat(localStorage.getItem('pos_voice_pitch') || '1.08');
+  utterance.rate = speed;
+  utterance.pitch = pitch;
   utterance.volume = 1.0;
 
   utterance.onend = () => {
     isSpeaking = false;
-    setTimeout(processSpeechQueue, 300);
+    setTimeout(processSpeechQueue, 350);
   };
 
   utterance.onerror = (e) => {
-    console.warn('Speech synthesis issue:', e);
+    console.warn('Speech synthesis utterance issue:', e);
     isSpeaking = false;
-    processSpeechQueue();
+    setTimeout(processSpeechQueue, 350);
   };
 
   window.speechSynthesis.speak(utterance);
 }
 
-function testHindiVoice() {
+/**
+ * Test Announcement matching the exact reference requirement
+ */
+function testVoiceAnnouncement() {
   initAudio();
-  const testText = "टेबल नंबर दो से नया ऑर्डर आया है: एक क्रिस्पी पनीर बर्गर, दो वेज ग्रिल्ड सैंडविच।";
-  const testRoman = "Table number 2 se naya order aaya hai: 1 Crispy Paneer Burger, 2 Veg Grilled Sandwich.";
-  speakHindiText(testText, testRoman);
-  showToast('Playing Hindi Voice Alert test...', '🎙️');
+  const sampleOrder = {
+    tableNo: 5,
+    items: [
+      { qty: 2, name: 'Chilli Paneer' },
+      { qty: 1, name: 'Veg Burger' },
+      { qty: 1, name: 'Cold Coffee' }
+    ]
+  };
+
+  const announcement = buildPosOrderAnnouncement(sampleOrder);
+  speechQueue.push(announcement);
+  processSpeechQueue();
+
+  showToast('Playing POS Voice Announcement...', '🎙️');
 }
 
 // -----------------------------------------------------------------------------
@@ -207,7 +378,7 @@ function showToast(message, icon = '✓') {
       display: flex;
       align-items: center;
       gap: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
       z-index: 99999;
       transform: translateY(100px);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -277,7 +448,6 @@ async function initServerData() {
     startPollingFallback();
   } catch (err) {
     console.error('Initial server sync warning:', err);
-    // Render defaults if any network issue
     renderDashboardOverview();
     renderKdsTickets();
     renderTablesManagement();
@@ -301,11 +471,8 @@ function startPollingFallback() {
           knownOrderIds.add(newOrder.id);
           if (!orders.some(o => o.id === newOrder.id)) {
             orders.unshift(newOrder);
-            playBellChime().then(() => {
-              const speech = newOrder.speechText || `टेबल नंबर ${newOrder.tableNo} से नया ऑर्डर आया है!`;
-              const roman = `New order from Table ${newOrder.tableNo}!`;
-              speakHindiText(speech, roman);
-            });
+            // Automatic Professional Voice Announcement
+            announceNewOrder(newOrder);
           }
         });
         renderDashboardOverview();
@@ -367,11 +534,11 @@ function switchNavView(viewName) {
     'dashboard': { title: 'Dashboard', sub: "Welcome back, Manager! Here's what's happening today." },
     'orders': { title: 'Order Management', sub: 'Track and manage live incoming and fulfilled customer orders.' },
     'tables': { title: 'Tables & QR Suite', sub: 'Monitor table occupancy, generate live QR codes, and download standees.' },
-    'kitchen': { title: 'Kitchen Display System (KDS)', sub: 'Live kitchen production tickets with dual-tone audio and Hindi speech.' },
+    'kitchen': { title: 'Kitchen Display System (KDS)', sub: 'Live kitchen production tickets with POS chime and natural voice alerts.' },
     'menus': { title: 'Menu Catalog', sub: 'Curated dishes, rates, vegetarian classifications, and stock status.' },
     'analytics': { title: 'Analytics & Reports', sub: 'Weekly revenue distribution, guest volume velocity, and product contribution.' },
-    'help': { title: 'Help & Quick Guide', sub: 'How to use table QR codes, order workflow, and Hindi voice alerts.' },
-    'settings': { title: 'Restaurant Settings', sub: 'Audio alerts, store profile, and ordering preferences.' }
+    'help': { title: 'Help & Operations Guide', sub: 'How to use table QR codes, POS workflow, and voice announcements.' },
+    'settings': { title: 'Restaurant & POS Voice Settings', sub: 'Fine-tune voice announcements, speech speed, and audio chimes.' }
   };
 
   const meta = titlesMap[viewName] || { title: 'Dashboard', sub: '' };
@@ -380,6 +547,10 @@ function switchNavView(viewName) {
 
   if (viewName === 'tables') {
     renderTablesManagement();
+  }
+
+  if (viewName === 'settings') {
+    populateVoiceSelectDropdown();
   }
 
   if (window.lucide && typeof lucide.createIcons === 'function') {
@@ -429,7 +600,6 @@ function renderDashboardOverview() {
   const avgOrderVal = orders.length ? Math.round(totalRevenue / (orders.length + 48)) : 365;
   if (aovEl) aovEl.innerText = `₹${avgOrderVal} AOV`;
 
-  // Row 3: Recent Activity
   renderRecentActivityList();
   renderTopDishesList();
 }
@@ -546,9 +716,9 @@ function renderKdsTickets() {
       <div class="empty-kds-box" style="grid-column: 1 / -1; text-align: center; padding: 48px; background: #FFFFFF; border-radius: 12px; border: 1px dashed #E5E5E5;">
         <i data-lucide="chef-hat" style="width: 44px; height: 44px; color: #16A36A; margin-bottom: 12px;"></i>
         <h3 style="font-size: 16px; font-weight: 700; color: #171717;">Kitchen Queue is Clear!</h3>
-        <p style="font-size: 13px; color: #737373; margin-top: 4px;">Incoming orders will chime and appear here with voice announcements.</p>
-        <button onclick="testHindiVoice()" style="margin-top: 14px; padding: 8px 16px; background: #FAFAFA; border: 1px solid #E5E5E5; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
-          🎙️ Test Hindi Audio Alert
+        <p style="font-size: 13px; color: #737373; margin-top: 4px;">Incoming customer orders will chime and announce automatically in clear Indian English.</p>
+        <button onclick="testVoiceAnnouncement()" style="margin-top: 14px; padding: 8px 16px; background: #FAFAFA; border: 1px solid #E5E5E5; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">
+          🎙️ Test POS Announcement
         </button>
       </div>
     `;
@@ -620,7 +790,7 @@ function renderKdsTickets() {
 
         <div class="kds-ticket-footer">
           ${actionBtnHtml}
-          <button class="btn-kds-secondary" onclick="replayOrderVoice('${order.id}')" title="Replay Hindi Voice Announcement">
+          <button class="btn-kds-secondary" onclick="replayOrderVoice('${order.id}')" title="Replay POS Voice Announcement">
             <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
           </button>
         </div>
@@ -657,7 +827,6 @@ async function updateOrderStatus(orderId, newStatus) {
       renderAllOrdersView();
     }
   } catch (err) {
-    // Local fallback update
     const o = orders.find(x => x.id === orderId);
     if (o) {
       o.status = newStatus;
@@ -673,9 +842,7 @@ async function updateOrderStatus(orderId, newStatus) {
 function replayOrderVoice(orderId) {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
-  const hindiSpeech = order.speechText || `टेबल नंबर ${order.tableNo} से नया ऑर्डर आया है!`;
-  const romanSpeech = `Table number ${order.tableNo} se order: ${order.items.map(i => `${i.qty} ${i.name}`).join(', ')}`;
-  speakHindiText(hindiSpeech, romanSpeech);
+  announceNewOrder(order);
 }
 
 // -----------------------------------------------------------------------------
@@ -735,7 +902,6 @@ function renderTablesManagement() {
 
     grid.appendChild(card);
 
-    // Draw the QR code inside the container
     const qrContainer = card.querySelector(`#qr-table-container-${tableNo}`);
     drawQRCode(qrContainer, targetUrl, 140);
   }
@@ -928,7 +1094,7 @@ function setupMobileQrModal() {
 // 10. NOTIFICATION DRAWER
 // -----------------------------------------------------------------------------
 function openNotificationDrawer() {
-  showToast('Notifications: Hindi Voice alerts are active & ready.', '🔔');
+  showToast('POS Voice Engine is active & ready.', '🔔');
 }
 
 // -----------------------------------------------------------------------------
@@ -941,7 +1107,8 @@ window.replayOrderVoice = replayOrderVoice;
 window.downloadTableQR = downloadTableQR;
 window.copyTableLink = copyTableLink;
 window.toggleTableOccupancy = toggleTableOccupancy;
-window.testHindiVoice = testHindiVoice;
+window.testVoiceAnnouncement = testVoiceAnnouncement;
+window.testHindiVoice = testVoiceAnnouncement; // backward compatibility alias
 window.showToast = showToast;
 window.openNotificationDrawer = openNotificationDrawer;
 
@@ -958,10 +1125,8 @@ if (socket) {
       renderTablesManagement();
       renderAllOrdersView();
 
-      initAudio();
-      const hindiSpeech = newOrder.speechText || `टेबल नंबर ${newOrder.tableNo} से नया आर्डर आया है।`;
-      const romanSpeech = `Table number ${newOrder.tableNo} se naya order aaya hai: ${newOrder.items.map(i => `${i.qty} ${i.name}`).join(', ')}`;
-      speakHindiText(hindiSpeech, romanSpeech);
+      // Professional POS Voice Announcement
+      announceNewOrder(newOrder);
     }
   });
 
@@ -995,9 +1160,11 @@ if (socket) {
       setTimeout(() => toast.remove(), 10000);
     }
 
-    const hindiSpeech = `ध्यान दें! टेबल नंबर ${alert.tableNo} ने ${alert.requestType} के लिए बुलाया है!`;
-    const romanSpeech = `Attention! Table number ${alert.tableNo} requested ${alert.requestType}!`;
-    speakHindiText(hindiSpeech, romanSpeech);
+    // Spoken service alert
+    const tableWord = numberToWord(alert.tableNo);
+    const serviceSpeech = `Assistance request from Table number ${tableWord}. ${alert.requestType || 'Waiter called'}.`;
+    speechQueue.push(serviceSpeech);
+    processSpeechQueue();
   });
 }
 
@@ -1031,15 +1198,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Audio Buttons
   document.getElementById('enableAudioBtn')?.addEventListener('click', () => {
     initAudio();
-    testHindiVoice();
+    testVoiceAnnouncement();
   });
 
   document.getElementById('testVoiceBtn')?.addEventListener('click', () => {
-    testHindiVoice();
+    testVoiceAnnouncement();
   });
 
   document.getElementById('kdsReplayVoiceBtn')?.addEventListener('click', () => {
-    testHindiVoice();
+    testVoiceAnnouncement();
   });
 
   // Notification Bell
@@ -1057,9 +1224,31 @@ document.addEventListener('DOMContentLoaded', () => {
     isMuted = !isMuted;
     const txt = document.getElementById('kdsMuteStatusText');
     if (txt) txt.innerText = isMuted ? 'Muted' : 'Sound On';
-    showToast(isMuted ? 'Kitchen sound muted' : 'Kitchen sound unmuted', isMuted ? '🔇' : '🔔');
+    showToast(isMuted ? 'POS Voice Muted' : 'POS Voice Sound On', isMuted ? '🔇' : '🔔');
   });
 
-  // Audio unlock on any first user interaction
+  // Voice Settings controls in View-Settings
+  const voiceSelect = document.getElementById('posVoiceSelect');
+  if (voiceSelect) {
+    voiceSelect.addEventListener('change', (e) => {
+      localStorage.setItem('pos_selected_voice_uri', e.target.value);
+      testVoiceAnnouncement();
+    });
+  }
+
+  const speedRange = document.getElementById('posSpeedRange');
+  const speedText = document.getElementById('speedValText');
+  if (speedRange) {
+    speedRange.value = localStorage.getItem('pos_voice_rate') || '1.02';
+    if (speedText) speedText.innerText = `${speedRange.value}x`;
+    speedRange.addEventListener('input', (e) => {
+      localStorage.setItem('pos_voice_rate', e.target.value);
+      if (speedText) speedText.innerText = `${e.target.value}x`;
+    });
+  }
+
+  // Audio unlock on any first user interaction anywhere on the screen
   document.body.addEventListener('click', initAudio, { once: true });
+  document.body.addEventListener('touchstart', initAudio, { once: true });
+  document.body.addEventListener('keydown', initAudio, { once: true });
 });

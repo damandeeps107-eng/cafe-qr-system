@@ -68,18 +68,47 @@ function getLocalIp() {
   return 'localhost';
 }
 
-// Helper: build Hindi voice text for order
-function generateHindiSpeechText(order) {
-  const table = order.tableNo;
-  const tableHindi = `टेबल नंबर ${table}`;
-  
-  const itemsList = order.items.map(item => {
-    const qty = item.qty;
-    const name = item.nameHindi || item.name;
-    return `${qty} ${name}`;
-  }).join(', ');
+function numberToWord(num) {
+  const words = {
+    1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
+    6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
+    11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen',
+    15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen',
+    19: 'nineteen', 20: 'twenty'
+  };
+  return words[num] || num.toString();
+}
 
-  return `${tableHindi} से नया ऑर्डर आया है: ${itemsList}।`;
+function capitalizeFirst(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Professional POS Natural English Announcement Generator
+function generateOrderAnnouncementSpeech(order) {
+  const tableWord = numberToWord(order.tableNo);
+
+  if (!order.items || order.items.length === 0) {
+    return `New order received! Table number ${tableWord}.`;
+  }
+
+  const formattedItems = order.items.map(item => {
+    const qtyWord = numberToWord(item.qty);
+    const cleanName = (item.name || '').replace(/\(.*\)/g, '').trim();
+    return `${qtyWord} ${cleanName}`;
+  });
+
+  let itemsClause = '';
+  if (formattedItems.length === 1) {
+    itemsClause = capitalizeFirst(formattedItems[0]);
+  } else if (formattedItems.length === 2) {
+    itemsClause = `${capitalizeFirst(formattedItems[0])} and ${formattedItems[1]}`;
+  } else {
+    const lastItem = formattedItems.pop();
+    itemsClause = `${capitalizeFirst(formattedItems.join(', '))}, and ${lastItem}`;
+  }
+
+  return `New order received! Table number ${tableWord}. ${itemsClause}.`;
 }
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -163,7 +192,7 @@ app.post('/api/orders', (req, res) => {
     totalAmount,
     status: 'pending', // pending -> preparing -> served -> completed / cancelled
     createdAt: new Date().toISOString(),
-    speechText: generateHindiSpeechText({ tableNo, items })
+    speechText: generateOrderAnnouncementSpeech({ tableNo, items })
   };
 
   orders.unshift(newOrder);
