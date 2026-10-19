@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Royal Cafe & Bistro — Dine-In Menu</title>
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/customer.css">
+</head>
+<body>
+
+  <!-- Top Brand Navigation Header -->
+  <header class="brand-header">
+    <div class="brand-header-inner">
+      <div class="brand-identity">
+        <h1 class="brand-title">The Royal Cafe</h1>
+        <div class="brand-badge-sub">Artisanal Bakery & Bistro</div>
+      </div>
+      
+      <div class="table-indicator" id="tableBadgeBtn" title="Change Table Number">
+        <span class="table-status-dot"></span>
+        <span class="table-text" id="tableBadgeText">TABLE 02</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quick Guest Assistance Bar -->
+  <section class="service-bar">
+    <div class="service-bar-inner">
+      <button class="btn-service" id="callWaterBtn">
+        <span>💧</span> Water
+      </button>
+      <button class="btn-service" id="callWaiterBtn">
+        <span>🛎️</span> Call Waiter
+      </button>
+      <button class="btn-service" id="askBillBtn">
+        <span>🧾</span> Request Bill
+      </button>
+    </div>
+  </section>
+
+  <!-- Active Order Progress Pill (shown when order is placed) -->
+  <div class="live-status-pill">
+    <div class="live-status-card hidden" id="activeOrderBanner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="pulse-indicator"></span>
+        <div>
+          <div style="font-size: 13px; font-weight: 700;">Order in Progress</div>
+          <div style="font-size: 11px; color: #a1a1aa;" id="bannerStatusText">Kitchen is preparing your order...</div>
+        </div>
+      </div>
+      <div style="font-size: 12px; font-weight: 700; color: #f4f4f5; display: flex; align-items: center; gap: 4px;">
+        Track <span>→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Input -->
+  <section class="search-wrapper">
+    <div class="search-field">
+      <svg class="search-icon-svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="dishSearchInput" placeholder="Search dishes, coffee, sandwiches...">
+    </div>
+  </section>
+
+  <!-- Categories Horizontal Navigation -->
+  <nav class="categories-container" id="categoriesNav">
+    <button class="tab-pill active" data-category="all">All Items</button>
+    <button class="tab-pill" data-category="burgers">Burgers</button>
+    <button class="tab-pill" data-category="sandwiches">Sandwiches</button>
+    <button class="tab-pill" data-category="pizza_fries">Pizza & Sides</button>
+    <button class="tab-pill" data-category="drinks">Coffee & Shakes</button>
+    <button class="tab-pill" data-category="desserts">Desserts</button>
+  </nav>
+
+  <!-- Main Dishes Catalog -->
+  <main class="menu-catalog">
+    <div class="catalog-header">
+      <h2 class="catalog-title" id="categoryHeading">Featured Creations</h2>
+      <span class="catalog-meta" id="itemsCountBadge">14 curated items</span>
+    </div>
+
+    <div class="catalog-grid" id="dishesContainer">
+      <!-- Dish cards dynamically injected via customer.js -->
+    </div>
+  </main>
+
+  <!-- Floating Checkout Dock -->
+  <div class="bottom-cart-dock" id="cartFloatingBar">
+    <div class="cart-dock-info">
+      <div class="cart-dock-badge"><span id="cartTotalQty">0</span> items selected</div>
+      <div class="cart-dock-price" id="cartTotalPrice">₹0</div>
+    </div>
+    <button class="btn-dock-checkout" id="openCartBtn">
+      View Order <span>→</span>
+    </button>
+  </div>
+
+  <!-- Cart & Checkout Modal Bottom Sheet -->
+  <div class="drawer-backdrop" id="cartModalOverlay">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <h3 class="drawer-headline">Your Order Summary</h3>
+        <button class="btn-close-drawer" id="closeCartBtn">✕</button>
+      </div>
+
+      <div style="background: var(--bg-muted); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);" id="cartTableIndicator">Table 02</span>
+        <span style="font-size: 11px; font-weight: 600; color: #16a34a; letter-spacing: 0.05em; text-transform: uppercase;">● QR Dine-In Verified</span>
+      </div>
+
+      <!-- Items List -->
+      <div class="order-items-list" id="cartItemsList">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Cooking Notes -->
+      <div>
+        <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block;">
+          Special Kitchen Instructions (Optional)
+        </label>
+        <input type="text" id="specialNoteInput" class="notes-input-box" placeholder="e.g. Less spicy, crispy bread, no onion, extra cheese...">
+      </div>
+
+      <!-- Bill Breakdown -->
+      <div class="bill-summary-box">
+        <div class="bill-entry">
+          <span>Subtotal</span>
+          <span id="billSubtotal">₹0</span>
+        </div>
+        <div class="bill-entry">
+          <span>Taxes & Service (5%)</span>
+          <span id="billGst">₹0</span>
+        </div>
+        <div class="bill-entry grand-total">
+          <span>Total Payable Amount</span>
+          <span id="billGrandTotal">₹0</span>
+        </div>
+      </div>
+
+      <!-- Confirm Order Button -->
+      <button class="btn-confirm-order" id="confirmOrderBtn">
+        Confirm & Send to Kitchen <span>→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Order Tracking Drawer -->
+  <div class="drawer-backdrop" id="statusModalOverlay">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <h3 class="drawer-headline">Live Order Tracker</h3>
+        <button class="btn-close-drawer" id="closeStatusBtn">✕</button>
+      </div>
+
+      <div style="text-align: center; margin: 12px 0 20px;">
+        <div style="font-size: 42px; margin-bottom: 8px;" id="statusEmoji">👨‍🍳</div>
+        <h2 style="font-size: 19px; font-weight: 800; color: var(--accent-dark);" id="statusTitle">Order Being Prepared</h2>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;" id="statusSubtitle">Our chef has received your order and is preparing it fresh.</p>
+        <div style="margin-top: 10px; font-size: 12px; font-weight: 700; color: #71717a;" id="statusOrderIdTag">ORDER #ORD-123456</div>
+      </div>
+
+      <!-- Elegant Stepper -->
+      <div class="progress-stepper">
+        <div class="stepper-node done" id="step1">
+          <div class="stepper-dot">✓</div>
+          <div class="stepper-info">
+            <h4>Order Received</h4>
+            <p>Order sent directly to the kitchen display</p>
+          </div>
+        </div>
+        <div class="stepper-node current" id="step2">
+          <div class="stepper-dot">2</div>
+          <div class="stepper-info">
+            <h4>Kitchen Cooking</h4>
+            <p>Your meal is currently being freshly prepared</p>
+          </div>
+        </div>
+        <div class="stepper-node" id="step3">
+          <div class="stepper-dot">3</div>
+          <div class="stepper-info">
+            <h4>Ready & Served</h4>
+            <p>Delivered fresh to your table</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-muted); border-radius: var(--radius-sm); padding: 14px; margin-top: 12px;">
+        <h4 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px;">Order Details</h4>
+        <div id="statusItemsSummary" style="font-size: 13px; color: var(--text-primary); line-height: 1.6;">
+          <!-- Items summary -->
+        </div>
+      </div>
+
+      <button style="margin-top: 18px; width: 100%; padding: 13px; background: var(--bg-muted); border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-weight: 700; font-size: 13px; color: var(--text-primary); cursor: pointer;" id="statusCloseActionBtn">
+        Back to Menu
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Selection Fallback Modal -->
+  <div class="drawer-backdrop" id="tableSelectModal">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <h3 class="drawer-headline">Select Table Number</h3>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+        Please select your table number so the kitchen team delivers your order accurately:
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;" id="tableGridContainer">
+        <!-- 1 to 12 buttons -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification">
+    <span id="toastIcon">✨</span> <span id="toastMessage">Item added</span>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/customer.js"></script>
+</body>
+</html>
+https://127.0.0.1:49191/static/artifacts/dcefe841-e574-4cd0-b006-271e87dad370/table_3_qr.png?csrf=fa1f4be5-ab1d-4377-afa3-cb3446bf454d

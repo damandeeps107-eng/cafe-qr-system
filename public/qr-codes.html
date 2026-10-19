@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Royal Cafe | Table QR Code Standees (Print & Download)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/qr-codes.css">
+  <!-- Include QRCode.js library for high-speed client-side rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Controls Bar -->
+  <header class="controls-header">
+    <div class="brand-section">
+      <span style="font-size: 24px;">🖨️</span>
+      <div>
+        <h1 class="brand-title">Table QR Standees & Print Suite</h1>
+        <div class="brand-sub">The Royal Cafe & Bistro — Dine-In QR Generator</div>
+      </div>
+    </div>
+
+    <div class="config-actions">
+      <!-- Custom URL Host Input -->
+      <div class="host-input-group" title="Base URL for QR Codes">
+        <span>Network Base URL:</span>
+        <input type="text" id="baseUrlInput" placeholder="http://192.168.1.X:3000">
+        <button id="applyUrlBtn" style="background: #374151; border: none; color: #fff; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Update</button>
+      </div>
+
+      <button class="btn-ctrl" id="addTableBtn">
+        <span>+</span> Add More Tables
+      </button>
+
+      <a href="/kitchen" class="btn-ctrl" style="text-decoration: none;">
+        <span>🍳</span> Kitchen Dashboard
+      </a>
+
+      <button class="btn-ctrl btn-print-primary" onclick="window.print()">
+        <span>🖨️</span> Print All Standees
+      </button>
+    </div>
+  </header>
+
+  <!-- Info Banner -->
+  <div class="info-banner">
+    <div>
+      💡 <strong>Pro Tip:</strong> Print these standees directly on A4 cardstock or photo paper. Place in acrylic tent stands or table stickers. Customers can scan directly with iOS Camera or Android Google Lens.
+    </div>
+    <div id="wifiNotice" style="font-weight: 700;">
+      <!-- Wifi IP injected -->
+    </div>
+  </div>
+
+  <!-- Standees Grid Container -->
+  <main class="standees-container">
+    <div class="standees-grid" id="standeesGrid">
+      <!-- Table Standees generated dynamically via JS -->
+    </div>
+  </main>
+
+  <script src="/qr-codes.js"></script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+[
+  {
+    "id": "ORD-900335",
+    "tableNo": 1,
+    "customerName": "Table 1",
+    "items": [
+      {
+        "id": "sw1",
+        "name": "Hot Choco Lava Cake",
+        "nameHindi": "चोको लावा केक",
+        "price": 89,
+        "qty": 1
+      }
+    ],
+    "specialNote": "",
+    "totalAmount": 89,
+    "status": "pending",
+    "createdAt": "2026-10-19T03:35:00.335Z",
+    "speechText": "टेबल नंबर 1 से नया ऑर्डर आया है: 1 चोको लावा केक।"
+  },
+  {
+    "id": "ORD-865659",
+    "tableNo": 1,
+    "customerName": "Table 1",
+    "items": [
+      {
+        "id": "d1",
+        "name": "Royal Cafe Cold Coffee",
+        "nameHindi": "कोल्ड कॉफ़ी विथ आइसक्रीम",
+        "price": 119,
+        "qty": 1
+      }
+    ],
+    "specialNote": "",
+    "totalAmount": 119,
+    "status": "pending",
+    "createdAt": "2026-10-19T03:34:25.659Z",
+    "speechText": "टेबल नंबर 1 से नया ऑर्डर आया है: 1 कोल्ड कॉफ़ी विथ आइसक्रीम।"
+  },
+  {
+    "id": "ORD-017540",
+    "tableNo": 2,
+    "customerName": "Table 2",
+    "items": [
+      {
+        "id": "p4",
+        "name": "Farmhouse Feast Pizza (8\")",
+        "nameHindi": "फार्महाउस स्पेशल पिज़्ज़ा",
+        "price": 229,
+        "qty": 1
+      }
+    ],
+    "specialNote": "",
+    "totalAmount": 229,
+    "status": "completed",
+    "createdAt": "2026-10-19T03:20:17.540Z",
+    "speechText": "टेबल नंबर 2 से नया ऑर्डर आया है: 1 फार्महाउस स्पेशल पिज़्ज़ा।",
+    "updatedAt": "2026-10-19T03:21:00.043Z"
+  },
+  {
+    "id": "ORD-040241",
+    "tableNo": 6,
+    "customerName": "VIP Table 6",
+    "items": [
+      {
+        "id": "b1",
+        "name": "Crispy Paneer Burger",
+        "nameHindi": "बर्गर",
+        "price": 129,
+        "qty": 2
+      },
+      {
+        "id": "s1",
+        "name": "Corn & Cheese Grilled Sandwich",
+        "nameHindi": "सैंडविच",
+        "price": 119,
+        "qty": 1
+      }
+    ],
+    "specialNote": "Double cheese, spicy mayo on the side",
+    "totalAmount": 377,
+    "status": "pending",
+    "createdAt": "2026-10-19T03:04:00.241Z",
+    "speechText": "टेबल नंबर 6 से नया ऑर्डर आया है: 2 बर्गर, 1 सैंडविच।"
+  },
+  {
+    "id": "ORD-542735",
+    "tableNo": 5,
+    "customerName": "VIP Table 5",
+    "items": [
+      {
+        "id": "s2",
+        "name": "Paneer Tikka Club Sandwich",
+        "nameHindi": "पनीर टिक्का सैंडविच",
+        "price": 149,
+        "qty": 2
+      },
+      {
+        "id": "d2",
+        "name": "Thick Belgian Chocolate Shake",
+        "nameHindi": "बेल्जियन चॉकलेट शेक",
+        "price": 139,
+        "qty": 2
+      }
+    ],
+    "specialNote": "Serve beverages chilled, sandwich extra toasted",
+    "totalAmount": 576,
+    "status": "pending",
+    "createdAt": "2026-10-19T02:39:02.735Z",
+    "speechText": "टेबल नंबर 5 से नया ऑर्डर आया है: 2 पनीर टिक्का सैंडविच, 2 बेल्जियन चॉकलेट शेक।"
+  },
+  {
+    "id": "ORD-712561",
+    "tableNo": 4,
+    "customerName": "Guest Table 4",
+    "items": [
+      {
+        "id": "b3",
+        "name": "Spicy Mexican Volcano Burger",
+        "nameHindi": "स्पाइसी मैक्सिकन बर्गर",
+        "price": 149,
+        "qty": 2
+      },
+      {
+        "id": "p1",
+        "name": "Peri Peri French Fries",
+        "nameHindi": "पेरी पेरी फ्रेंच फ्राइज़",
+        "price": 89,
+        "qty": 1
+      },
+      {
+        "id": "d1",
+        "name": "Royal Cafe Cold Coffee",
+        "nameHindi": "कोल्ड कॉफ़ी",
+        "price": 119,
+        "qty": 2
+      }
+    ],
+    "specialNote": "Make it extra crispy, spicy mayo on the side",
+    "totalAmount": 625,
+    "status": "pending",
+    "createdAt": "2026-10-19T01:51:52.561Z",
+    "speechText": "टेबल नंबर 4 से नया ऑर्डर आया है: 2 स्पाइसी मैक्सिकन बर्गर, 1 पेरी पेरी फ्रेंच फ्राइज़, 2 कोल्ड कॉफ़ी।"
+  },
+  {
+    "id": "ORD-548330",
+    "tableNo": 2,
+    "customerName": "Table 2",
+    "items": [
+      {
+        "id": "b1",
+        "name": "Crispy Paneer Burger",
+        "nameHindi": "क्रिस्पी पनीर बर्गर",
+        "price": 129,
+        "qty": 1
+      }
+    ],
+    "specialNote": "",
+    "totalAmount": 129,
+    "status": "pending",
+    "createdAt": "2026-10-19T01:49:08.330Z",
+    "speechText": "टेबल नंबर 2 से नया ऑर्डर आया है: 1 क्रिस्पी पनीर बर्गर।"
+  },
+  {
+    "id": "ORD-863657",
+    "tableNo": 2,
+    "customerName": "Table 2 Guest",
+    "items": [
+      {
+        "id": "b1",
+        "name": "Crispy Paneer Burger",
+        "nameHindi": "बर्गर",
+        "price": 129,
+        "qty": 1
+      },
+      {
+        "id": "s1",
+        "name": "Corn & Cheese Grilled Sandwich",
+        "nameHindi": "सैंडविच",
+        "price": 119,
+        "qty": 2
+      }
+    ],
+    "specialNote": "No onions, extra crisp",
+    "totalAmount": 367,
+    "status": "pending",
+    "createdAt": "2026-10-19T01:37:43.657Z",
+    "speechText": "टेबल नंबर 2 से नया ऑर्डर आया है: 1 बर्गर, 2 सैंडविच।"
+  },
+  {
+    "id": "ORD-089480",
+    "tableNo": 2,
+    "customerName": "Rohan Table 2",
+    "items": [
+      {
+        "id": "b1",
+        "name": "Crispy Paneer Burger",
+        "nameHindi": "बर्गर",
+        "price": 129,
+        "qty": 1
+      },
+      {
+        "id": "s1",
+        "name": "Corn & Cheese Grilled Sandwich",
+        "nameHindi": "सैंडविच",
+        "price": 119,
+        "qty": 2
+      }
+    ],
+    "specialNote": "एक बर्गर में चीज एक्स्ट्रा डालना",
+    "totalAmount": 367,
+    "status": "preparing",
+    "createdAt": "2026-10-19T01:24:49.480Z",
+    "speechText": "टेबल नंबर 2 से नया ऑर्डर आया है: 1 बर्गर, 2 सैंडविच।",
+    "updatedAt": "2026-10-19T01:24:57.273Z"
+  },
+  {
+    "id": "ORD-963591",
+    "tableNo": 2,
+    "customerName": "Rahul Verma",
+    "items": [
+      {
+        "id": "b1",
+        "name": "Crispy Paneer Burger",
+        "nameHindi": "क्रिस्पी पनीर बर्गर",
+        "price": 129,
+        "qty": 1
+      },
+      {
+        "id": "s1",
+        "name": "Corn & Cheese Grilled Sandwich",
+        "nameHindi": "कॉर्न और चीज़ ग्रिल्ड सैंडविच",
+        "price": 119,
+        "qty": 2
+      }
+    ],
+    "specialNote": "कम तीखा रखना, क्रिस्पी ब्रेड",
+    "totalAmount": 367,
+    "status": "pending",
+    "createdAt": "2026-10-19T01:22:43.591Z",
+    "speechText": "टेबल नंबर 2 से नया ऑर्डर आया है: 1 क्रिस्पी पनीर बर्गर, 2 कॉर्न और चीज़ ग्रिल्ड सैंडविच।"
+  }
+]
