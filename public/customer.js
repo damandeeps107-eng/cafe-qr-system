@@ -318,6 +318,7 @@ async function placeOrder() {
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
       body: JSON.stringify({
         tableNo: currentTable,
         items,

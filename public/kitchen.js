@@ -553,25 +553,14 @@ async function announceOrder(order) {
     } catch (e) {}
   }
 
-  // 1. Play clear 2-tone Railway notification chime immediately
-  await playRailwayChime();
+  // 1. Play clear 2-tone Railway notification chime immediately (non-blocking)
+  playRailwayChime();
 
-  // Natural breath pause between chime and speech (300ms)
-  await new Promise(r => setTimeout(r, 300));
+  // Natural breath pause while chime is ringing (250ms)
+  await new Promise(r => setTimeout(r, 250));
 
-  // Synthesize or retrieve ElevenLabs audio (max 400ms wait so it NEVER lags)
-  let audioSource = order.audioDataUri || order.audioUrl || null;
-  if (!audioSource) {
-    try {
-      audioSource = await Promise.race([
-        requestElevenLabsSpeech(firstAnnouncement),
-        new Promise(resolve => setTimeout(() => resolve(null), 400))
-      ]);
-    } catch (e) {
-      audioSource = null;
-    }
-  }
-
+  // Check if audioDataUri is already in memory (from server)
+  const audioSource = order.audioDataUri || order.audioUrl || null;
   if (audioSource) {
     try {
       const audio = new Audio(audioSource);
@@ -581,7 +570,7 @@ async function announceOrder(order) {
       await playAudioElement(audio);
 
       // 3. Short pause
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 1000));
 
       // 4. Repeat announcement (Pass 2)
       audio.currentTime = 0;
@@ -589,13 +578,13 @@ async function announceOrder(order) {
 
       return;
     } catch (err) {
-      console.warn('ElevenLabs audio playback failed, falling back to instant speech synthesis:', err);
+      console.warn('Audio element error, falling back to instant speech:', err);
     }
   }
 
-  // Instant Fallback: Native Hindi Web Speech Synthesis (Zero lag, crisp Railway voice)
+  // Instant Zero-Delay Native Hindi Web Speech Synthesis
   await speakHindiUtterance(firstAnnouncement);
-  await new Promise(r => setTimeout(r, 1200));
+  await new Promise(r => setTimeout(r, 1000));
   await speakHindiUtterance(firstAnnouncement);
 }
 
@@ -800,9 +789,9 @@ function startPollingFallback() {
   if (isPollingStarted) return;
   isPollingStarted = true;
 
-  setInterval(async () => {
+  const pollOrders = async () => {
     try {
-      const res = await fetch('/api/orders');
+      const res = await fetch(`/api/orders?_t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) return;
       const latestOrders = await res.json();
 
@@ -812,14 +801,13 @@ function startPollingFallback() {
           knownOrderIds.add(newOrder.id);
           if (!orders.some(o => o.id === newOrder.id)) {
             orders.unshift(newOrder);
-            // Automatic Professional Voice Announcement
+            renderDashboardOverview();
+            renderKdsTickets();
+            renderTablesManagement();
+            renderAllOrdersView();
             announceNewOrder(newOrder);
           }
         });
-        renderDashboardOverview();
-        renderKdsTickets();
-        renderTablesManagement();
-        renderAllOrdersView();
       }
 
       let hasChanges = false;
@@ -839,7 +827,10 @@ function startPollingFallback() {
     } catch (e) {
       // silent background polling
     }
-  }, 800);
+  };
+
+  pollOrders();
+  setInterval(pollOrders, 400);
 }
 
 // -----------------------------------------------------------------------------
