@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Royal Cafe — Restaurant Management Dashboard</title>
   
+  <script>
+    // If table parameter exists (scanned from customer table QR), redirect directly to Customer Menu
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('table')) {
+        window.location.replace('/order' + window.location.search);
+      }
+    })();
+  </script>
+
   <!-- Inter Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,8 +22,8 @@
   
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- QRCode.js -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- Local Bundled QRCode.js -->
+  <script src="/vendor/qrcode.min.js"></script>
 
   <link rel="stylesheet" href="/kitchen.css">
 </head>
@@ -147,7 +157,7 @@
             <span class="profile-role">Store Manager</span>
           </div>
         </div>
-        <button class="profile-action-btn" title="Profile Settings">
+        <button class="profile-action-btn" title="Profile Settings" onclick="switchNavView('settings')">
           <i data-lucide="more-vertical" style="width: 16px; height: 16px;"></i>
         </button>
       </div>
@@ -275,53 +285,17 @@
               </div>
             </div>
 
-            <!-- Handcrafted Precise Weekly Bar Chart Canvas -->
+            <!-- Weekly Bar Chart -->
             <div class="chart-bars-container" id="revenueChartContainer">
-              <!-- Mon -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Monday: ₹2,400">
-                  <div class="bar-fill" style="height: 45%;"></div>
-                </div>
-              </div>
-              <!-- Tue -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Tuesday: ₹3,100">
-                  <div class="bar-fill" style="height: 60%;"></div>
-                </div>
-              </div>
-              <!-- Wed -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Wednesday: ₹2,800">
-                  <div class="bar-fill" style="height: 52%;"></div>
-                </div>
-              </div>
-              <!-- Thu -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Thursday: ₹3,900">
-                  <div class="bar-fill" style="height: 75%;"></div>
-                </div>
-              </div>
-              <!-- Fri -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Friday: ₹4,800">
-                  <div class="bar-fill" style="height: 90%;"></div>
-                </div>
-              </div>
-              <!-- Sat -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Saturday: ₹5,400">
-                  <div class="bar-fill" style="height: 100%;"></div>
-                </div>
-              </div>
-              <!-- Sun -->
-              <div class="chart-bar-column">
-                <div class="bar-track" title="Sunday: ₹4,200">
-                  <div class="bar-fill" style="height: 82%;"></div>
-                </div>
-              </div>
+              <div class="chart-bar-column"><div class="bar-track" title="Mon: ₹2,400"><div class="bar-fill" style="height: 45%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Tue: ₹3,100"><div class="bar-fill" style="height: 60%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Wed: ₹2,800"><div class="bar-fill" style="height: 52%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Thu: ₹3,900"><div class="bar-fill" style="height: 75%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Fri: ₹4,800"><div class="bar-fill" style="height: 90%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Sat: ₹5,400"><div class="bar-fill" style="height: 100%;"></div></div></div>
+              <div class="chart-bar-column"><div class="bar-track" title="Sun: ₹4,200"><div class="bar-fill" style="height: 82%;"></div></div></div>
             </div>
 
-            <!-- X-Axis Days Labels -->
             <div class="chart-x-labels">
               <span class="chart-x-label">Mon</span>
               <span class="chart-x-label">Tue</span>
@@ -333,14 +307,13 @@
             </div>
           </div>
 
-          <!-- Right: Business Data Card (3 Stacked Pastel Cards) -->
+          <!-- Right: Business Data Card -->
           <div class="business-data-card">
             <div class="card-header-row">
               <h3 class="card-title">Business Data</h3>
             </div>
 
             <div class="business-cards-stack">
-              <!-- Stack 1: Number of Customers (Pastel Green) -->
               <div class="pastel-stat-card card-customers">
                 <div class="pastel-card-left">
                   <div class="pastel-card-icon">
@@ -356,7 +329,6 @@
                 </div>
               </div>
 
-              <!-- Stack 2: Total Orders (Pastel Blue) -->
               <div class="pastel-stat-card card-orders">
                 <div class="pastel-card-left">
                   <div class="pastel-card-icon">
@@ -372,7 +344,6 @@
                 </div>
               </div>
 
-              <!-- Stack 3: Average Order Value (Pastel Amber) -->
               <div class="pastel-stat-card card-aov">
                 <div class="pastel-card-left">
                   <div class="pastel-card-icon">
@@ -393,7 +364,6 @@
 
         <!-- ROW 3: RECENT ACTIVITY AND TOP DISHES -->
         <div class="overview-bottom-grid">
-          <!-- Left: Recent Activity Card -->
           <div class="recent-activity-card">
             <div class="card-header-row">
               <h3 class="card-title">Recent Activity</h3>
@@ -402,14 +372,9 @@
                 <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
               </button>
             </div>
-
-            <!-- Activity List Rows -->
-            <div class="activity-rows-list" id="recentActivityList">
-              <!-- Dynamically populated from actual orders -->
-            </div>
+            <div class="activity-rows-list" id="recentActivityList"></div>
           </div>
 
-          <!-- Right: Top Dishes Card -->
           <div class="top-dishes-card">
             <div class="card-header-row">
               <h3 class="card-title">Top Dishes</h3>
@@ -418,11 +383,7 @@
                 <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
               </button>
             </div>
-
-            <!-- Top Dishes List -->
-            <div class="top-dishes-list" id="topDishesList">
-              <!-- Dynamically populated from menu -->
-            </div>
+            <div class="top-dishes-list" id="topDishesList"></div>
           </div>
         </div>
 
@@ -432,7 +393,6 @@
            VIEW 2: KITCHEN DISPLAY SYSTEM (LIVE KDS WITH HINDI VOICE ALERTS)
       -------------------------------------------------------------------- -->
       <section class="view-section" id="view-kitchen">
-        <!-- KDS Tabs & Action Controls Bar -->
         <div class="kds-filters-bar">
           <div class="kds-tabs-group">
             <button class="kds-filter-pill active" data-filter="active">
@@ -469,35 +429,30 @@
           </div>
         </div>
 
-        <!-- KDS Production Tickets Grid -->
-        <div class="kds-tickets-grid" id="kdsTicketsGrid">
-          <!-- Dynamically populated tickets -->
-        </div>
+        <div class="kds-tickets-grid" id="kdsTicketsGrid"></div>
       </section>
 
       <!-- -------------------------------------------------------------------
-           VIEW 3: TABLES & QR CODES MANAGEMENT
+           VIEW 3: TABLES & QR CODES MANAGEMENT (WORKING 12 TABLES)
       -------------------------------------------------------------------- -->
       <section class="view-section" id="view-tables">
         <div class="kds-filters-bar">
           <div>
             <h3 class="card-title">Restaurant Tables & Contactless QR Codes</h3>
             <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
-              Manage tables, check live occupancy, and print table QR standees.
+              Manage tables, check live occupancy, and print or download table QR standees.
             </p>
           </div>
           <div class="kds-tools-group">
             <a href="/qr-codes" target="_blank" class="btn-kds-primary" style="text-decoration: none;">
               <i data-lucide="printer" style="width: 16px; height: 16px;"></i>
-              <span>Print All Standees</span>
+              <span>Print All 12 Standees</span>
             </a>
           </div>
         </div>
 
-        <!-- Tables Grid -->
-        <div class="tables-grid" id="tablesManagementGrid">
-          <!-- Dynamically populated 12 tables -->
-        </div>
+        <!-- Dynamic 12 Tables Grid -->
+        <div class="tables-grid" id="tablesManagementGrid"></div>
       </section>
 
       <!-- -------------------------------------------------------------------
@@ -513,9 +468,7 @@
               </p>
             </div>
           </div>
-          <div class="activity-rows-list" id="allOrdersTableView">
-            <!-- Populated dynamically -->
-          </div>
+          <div class="activity-rows-list" id="allOrdersTableView"></div>
         </div>
       </section>
 
@@ -532,9 +485,7 @@
               </p>
             </div>
           </div>
-          <div class="activity-rows-list" id="menuManagementCatalog">
-            <!-- Populated dynamically -->
-          </div>
+          <div class="activity-rows-list" id="menuManagementCatalog"></div>
         </div>
       </section>
 
@@ -568,6 +519,87 @@
                 <span style="font-weight: 700;">Pizzas & Desserts</span>
                 <span style="font-weight: 800; color: #D97706;">18% of Sales</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 7: HELP & QUICK GUIDE
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-help">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">Help & Restaurant Operations Guide</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Learn how the digital table QR and kitchen voice system works seamlessly.
+              </p>
+            </div>
+          </div>
+          <div style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div style="background: #FAFAFA; border: 1px solid #EAEAEA; border-radius: 10px; padding: 18px;">
+              <div style="font-size: 24px; margin-bottom: 8px;">📱</div>
+              <h4 style="font-size: 14px; font-weight: 800; color: #171717;">1. Table QR Ordering</h4>
+              <p style="font-size: 12px; color: #737373; margin-top: 6px; line-height: 1.6;">
+                Each table has a dedicated QR standee. When customers scan it using any mobile camera or Google Lens, the Luxury English Menu opens instantly for their specific table without downloading any apps.
+              </p>
+            </div>
+            <div style="background: #FAFAFA; border: 1px solid #EAEAEA; border-radius: 10px; padding: 18px;">
+              <div style="font-size: 24px; margin-bottom: 8px;">🔔</div>
+              <h4 style="font-size: 14px; font-weight: 800; color: #171717;">2. Kitchen Voice Alerts</h4>
+              <p style="font-size: 12px; color: #737373; margin-top: 6px; line-height: 1.6;">
+                Whenever a customer places an order, the system plays a dual-tone restaurant bell chime and speaks aloud in natural Hindi announcing the table number and dish items to your kitchen chefs.
+              </p>
+            </div>
+            <div style="background: #FAFAFA; border: 1px solid #EAEAEA; border-radius: 10px; padding: 18px;">
+              <div style="font-size: 24px; margin-bottom: 8px;">🖨️</div>
+              <h4 style="font-size: 14px; font-weight: 800; color: #171717;">3. Print Standees</h4>
+              <p style="font-size: 12px; color: #737373; margin-top: 6px; line-height: 1.6;">
+                Go to the "Tables & QR" tab and click "Print All Standees" to get high-resolution printable table cards for Tables 1 through 12.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------------------------
+           VIEW 8: STORE SETTINGS
+      -------------------------------------------------------------------- -->
+      <section class="view-section" id="view-settings">
+        <div class="recent-activity-card">
+          <div class="card-header-row">
+            <div>
+              <h3 class="card-title">Restaurant & Audio Configuration</h3>
+              <p style="font-size: 13px; color: var(--secondary-text); margin-top: 2px;">
+                Manage voice announcements, audio chimes, and live table capacity.
+              </p>
+            </div>
+          </div>
+          <div style="padding: 24px; max-width: 640px; display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Hindi Voice Announcements</div>
+                <div style="font-size: 12px; color: #737373;">Speaks order tickets aloud when customers place orders</div>
+              </div>
+              <button onclick="testHindiVoice()" class="btn-kds-primary" style="padding: 8px 16px;">
+                <i data-lucide="volume-2" style="width: 14px; height: 14px;"></i>
+                <span>Test Voice Alert</span>
+              </button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Active Table Count</div>
+                <div style="font-size: 12px; color: #737373;">Number of dining tables configured with QR standees</div>
+              </div>
+              <span style="font-weight: 800; font-size: 14px; background: #FAFAFA; border: 1px solid #EAEAEA; padding: 6px 14px; border-radius: 6px;">12 Tables</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Real-Time Sync Engine</div>
+                <div style="font-size: 12px; color: #737373;">WebSocket + Smart Polling Auto-Sync</div>
+              </div>
+              <span style="font-size: 12px; font-weight: 700; color: #16A36A; background: rgba(22, 163, 106, 0.1); padding: 4px 10px; border-radius: 12px;">● Connected Live</span>
             </div>
           </div>
         </div>
@@ -610,8 +642,8 @@
       </div>
 
       <!-- High Contrast Big QR Frame -->
-      <div class="qr-big-frame">
-        <canvas id="modalQrCanvas" class="qr-big-canvas"></canvas>
+      <div class="qr-big-frame" style="display: flex; justify-content: center; align-items: center; min-height: 230px;">
+        <div id="modalQrContainer" class="qr-big-canvas"></div>
       </div>
 
       <div class="qr-scan-instruction-box">
@@ -637,8 +669,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="/socket.io/socket.io.js"></script>
+  <!-- Scripts: Local bundled vendor files -->
+  <script src="/vendor/socket.io.min.js"></script>
   <script src="/kitchen.js"></script>
 </body>
 </html>

@@ -1,5 +1,12 @@
 // Modern Minimalist Customer Dine-In Logic (Pure English UI)
-const socket = io();
+let socket = null;
+try {
+  if (typeof io === 'function') {
+    socket = io({ transports: ['websocket', 'polling'], timeout: 4000 });
+  }
+} catch (e) {
+  console.warn('Socket.IO init bypassed, will use polling fallback:', e);
+}
 
 // State
 let menuData = [];
@@ -439,16 +446,24 @@ function openStatusModal(order) {
 }
 
 // Socket.io Real-time event listeners
-socket.on('order_status_updated', (updated) => {
-  if (activeOrder && activeOrder.id === updated.id) {
-    activeOrder = updated;
-    updateActiveOrderBanner();
-    if (document.getElementById('statusModalOverlay').classList.contains('open')) {
-      openStatusModal(activeOrder);
+if (socket) {
+  socket.on('order_status_updated', (updated) => {
+    if (activeOrder && activeOrder.id === updated.id) {
+      activeOrder = updated;
+      updateActiveOrderBanner();
+      if (document.getElementById('statusModalOverlay').classList.contains('open')) {
+        openStatusModal(activeOrder);
+      }
+      showToast(`Order status: ${updated.status}`, '🔔');
     }
-    showToast(`Order status: ${updated.status}`, '🔔');
-  }
-});
+  });
+}
+
+// Expose global functions on window for inline onclicks
+window.addToCart = addToCart;
+window.changeQty = changeQty;
+window.renderCartDrawer = renderCartDrawer;
+window.openStatusModal = openStatusModal;
 
 // Event Bindings
 document.addEventListener('DOMContentLoaded', () => {

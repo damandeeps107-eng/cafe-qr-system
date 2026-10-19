@@ -87,51 +87,68 @@ function createStandeeElement(tableNo) {
 }
 
 function generateQRCodeForTable(tableNo) {
-  const canvas = document.getElementById(`qr-canvas-${tableNo}`);
-  if (!canvas) return;
+  const container = document.getElementById(`qr-canvas-${tableNo}`);
+  if (!container) return;
+  container.innerHTML = '';
 
   const targetUrl = `${baseUrl}/order?table=${tableNo}`;
 
-  if (window.QRCode && typeof QRCode.toCanvas === 'function') {
-    QRCode.toCanvas(canvas, targetUrl, {
-      width: 200,
-      margin: 2,
-      errorCorrectionLevel: 'M',
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      }
-    }, function (error) {
-      if (error) console.error(error);
-    });
-  } else {
-    // Fallback: draw placeholder or fetch from backend
-    fetch(`/api/qr/${tableNo}`)
-      .then(r => r.json())
-      .then(d => {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = canvas.getContext('2d');
-          canvas.width = 175;
-          canvas.height = 175;
-          ctx.drawImage(img, 0, 0, 175, 175);
-        };
-        img.src = d.qrDataUrl;
-      })
-      .catch(console.error);
+  if (typeof QRCode === 'function') {
+    try {
+      new QRCode(container, {
+        text: targetUrl,
+        width: 175,
+        height: 175,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: (QRCode.CorrectLevel && QRCode.CorrectLevel.M) || 0
+      });
+      return;
+    } catch (e) {
+      console.warn('QRCode error, using fallback:', e);
+    }
   }
+
+  // Fallback: draw placeholder from backend or image
+  fetch(`/api/qr/${tableNo}`)
+    .then(r => r.json())
+    .then(d => {
+      const img = document.createElement('img');
+      img.src = d.qrDataUrl;
+      img.style.width = '175px';
+      img.style.height = '175px';
+      container.appendChild(img);
+    })
+    .catch(() => {
+      const img = document.createElement('img');
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=175x175&data=${encodeURIComponent(targetUrl)}`;
+      img.style.width = '175px';
+      img.style.height = '175px';
+      container.appendChild(img);
+    });
 }
 
 function downloadStandeeQR(tableNo) {
-  const canvas = document.getElementById(`qr-canvas-${tableNo}`);
-  if (!canvas) return;
+  const container = document.getElementById(`qr-canvas-${tableNo}`);
+  if (!container) return;
 
+  const canvas = container.querySelector('canvas');
+  const img = container.querySelector('img');
   const link = document.createElement('a');
   const tableFormatted = tableNo < 10 ? `0${tableNo}` : tableNo;
-  link.download = `RoyalCafe_Table_${tableFormatted}_QR.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+  link.download = `RoyalCafe_Standee_Table_${tableFormatted}.png`;
+
+  if (canvas) {
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } else if (img) {
+    link.href = img.src;
+    link.target = '_blank';
+    link.click();
+  }
 }
+
+window.downloadStandeeQR = downloadStandeeQR;
 
 document.addEventListener('DOMContentLoaded', () => {
   initServerInfo();
