@@ -5,6 +5,37 @@ const path = require('path');
 const fs = require('fs');
 const QRCode = require('qrcode');
 const os = require('os');
+const crypto = require('crypto');
+
+// Load environment variables (ElevenLabs API Key, etc.)
+function loadEnvVariables() {
+  const envCandidates = [
+    path.join(__dirname, '.env'),
+    '/Users/user/.gemini/antigravity-ide/scratch/.env'
+  ];
+  for (const envFile of envCandidates) {
+    try {
+      if (fs.existsSync(envFile)) {
+        const content = fs.readFileSync(envFile, 'utf8');
+        content.split('\n').forEach(line => {
+          const t = line.trim();
+          if (t && !t.startsWith('#') && t.includes('=')) {
+            const idx = t.indexOf('=');
+            const k = t.slice(0, idx).trim();
+            let v = t.slice(idx + 1).trim();
+            if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+              v = v.slice(1, -1);
+            }
+            if (!process.env[k]) {
+              process.env[k] = v;
+            }
+          }
+        });
+      }
+    } catch (e) {}
+  }
+}
+loadEnvVariables();
 
 const app = express();
 const server = http.createServer(app);
@@ -24,6 +55,97 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// ElevenLabs TTS Configuration & Cache
+const DEFAULT_ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL'; // Sarah - Authoritative Indian Railway public announcement voice
+const ELEVENLABS_MODEL_ID = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2';
+const TTS_CACHE_DIR = isVercel ? path.join('/tmp', 'tts_cache') : path.join(__dirname, 'public', 'audio', 'cache');
+
+if (!fs.existsSync(TTS_CACHE_DIR)) {
+  try {
+    fs.mkdirSync(TTS_CACHE_DIR, { recursive: true });
+  } catch (err) {}
+}
+
+async function synthesizeElevenLabsSpeech(text, customVoiceId) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    return { success: false, reason: 'NO_API_KEY', message: 'ElevenLabs API Key not configured in environment' };
+  }
+
+  const voiceId = customVoiceId || DEFAULT_ELEVENLABS_VOICE_ID;
+  const hash = crypto.createHash('md5').update(`${voiceId}_${text}`).digest('hex');
+  const cacheFilename = `tts_${hash}.mp3`;
+  const cacheFilePath = path.join(TTS_CACHE_DIR, cacheFilename);
+
+  // Return from disk cache if already generated (guarantees single generation, saves credits!)
+  if (fs.existsSync(cacheFilePath)) {
+    try {
+      const stats = fs.statSync(cacheFilePath);
+      if (stats.size > 2000) {
+        const buffer = fs.readFileSync(cacheFilePath);
+        return {
+          success: true,
+          cached: true,
+          voiceId,
+          audioUrl: `/audio/cache/${cacheFilename}`,
+          audioDataUri: `data:audio/mpeg;base64,${buffer.toString('base64')}`,
+          size: stats.size
+        };
+      }
+    } catch (e) {}
+  }
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: ELEVENLABS_MODEL_ID,
+        voice_settings: {
+          stability: 0.65,
+          similarity_boost: 0.85,
+          style: 0.0,
+          use_speaker_boost: true
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error('ElevenLabs TTS error:', response.status, errBody);
+      return { success: false, status: response.status, error: errBody };
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    try {
+      fs.writeFileSync(cacheFilePath, buffer);
+    } catch (err) {
+      console.warn('Could not write cache file to disk:', err.message);
+    }
+
+    const audioDataUri = `data:audio/mpeg;base64,${buffer.toString('base64')}`;
+
+    return {
+      success: true,
+      cached: false,
+      voiceId,
+      audioUrl: `/audio/cache/${cacheFilename}`,
+      audioDataUri,
+      size: buffer.length
+    };
+  } catch (err) {
+    console.error('ElevenLabs request failed:', err);
+    return { success: false, error: err.message };
+  }
 }
 
 // In-memory state with file persistence
@@ -279,6 +401,15 @@ app.post('/api/orders', (req, res) => {
     speechTextRepeat: secondAnnouncement
   };
 
+  // Pre-generate / cache ElevenLabs speech in background for instant playback
+  synthesizeElevenLabsSpeech(firstAnnouncement).then(ttsRes => {
+    if (ttsRes && ttsRes.success) {
+      newOrder.audioUrl = ttsRes.audioUrl;
+      newOrder.audioDataUri = ttsRes.audioDataUri;
+      io.emit('order_audio_ready', { orderId: newOrder.id, audioUrl: ttsRes.audioUrl, audioDataUri: ttsRes.audioDataUri });
+    }
+  }).catch(e => console.warn('Background TTS warning:', e.message));
+
   orders.unshift(newOrder);
   saveOrders();
 
@@ -351,6 +482,29 @@ app.get('/api/qr/:tableNo', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate QR code' });
   }
+});
+
+// ElevenLabs TTS Synthesis Endpoints
+app.post('/api/tts/synthesize', async (req, res) => {
+  try {
+    const { text, voiceId } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ success: false, error: 'Text string is required' });
+    }
+    const result = await synthesizeElevenLabsSpeech(text.trim(), voiceId);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/tts/status', (req, res) => {
+  res.json({
+    configured: !!process.env.ELEVENLABS_API_KEY,
+    voiceId: DEFAULT_ELEVENLABS_VOICE_ID,
+    modelId: ELEVENLABS_MODEL_ID,
+    provider: 'ElevenLabs'
+  });
 });
 
 // WebSocket Connection handling

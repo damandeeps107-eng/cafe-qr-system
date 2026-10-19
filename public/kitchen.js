@@ -417,11 +417,59 @@ function speakHindiUtterance(text) {
   });
 }
 
+function playAudioElement(audio) {
+  return new Promise((resolve) => {
+    let finished = false;
+    const done = () => {
+      if (!finished) {
+        finished = true;
+        resolve();
+      }
+    };
+    audio.onended = done;
+    audio.onerror = (e) => {
+      console.warn('Audio playback error:', e);
+      done();
+    };
+    // 45s safety timeout
+    const timer = setTimeout(done, 45000);
+    audio.play().then(() => {}).catch(err => {
+      console.warn('Audio play() error:', err);
+      clearTimeout(timer);
+      done();
+    });
+  });
+}
+
+async function requestElevenLabsSpeech(text) {
+  try {
+    const res = await fetch('/api/tts/synthesize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success) {
+        return data.audioDataUri || data.audioUrl;
+      }
+    }
+  } catch (err) {
+    console.warn('ElevenLabs API fetch error:', err);
+  }
+  return null;
+}
+
 /**
- * ORDER ANNOUNCEMENT ENGINE (Plays Once 1x by default, optional 2x repeat)
+ * ELEVENLABS INDIAN RAILWAY HINDI ANNOUNCEMENT ENGINE (AUTOMATIC 2X REPEAT)
+ * 1. Play 2-tone Railway Melodic Chime (Ding-Dong)
+ * 2. Announce complete order in Hindi with ElevenLabs natural female voice
+ * 3. Wait 2 seconds
+ * 4. Replay the complete order announcement (replaying same generated audio buffer)
+ * 5. Stop automatically
  */
 async function announceOrder(order) {
-  const { firstAnnouncement, secondAnnouncement } = buildRailwayHindiAnnouncements(order);
+  const { firstAnnouncement } = buildRailwayHindiAnnouncements(order);
 
   // Inform any other open tabs on this computer so they do NOT announce the same order
   if (posAudioChannel && order.id) {
@@ -430,21 +478,44 @@ async function announceOrder(order) {
     } catch (e) {}
   }
 
-  // 1. Play clear notification chime
+  // 1. Play clear 2-tone Railway notification chime
   await playRailwayChime();
 
-  // 2. Short natural breath pause
-  await new Promise(r => setTimeout(r, 400));
+  // Natural breath pause between chime and speech
+  await new Promise(r => setTimeout(r, 450));
 
-  // 3. Clear Hindi voice announcement (Plays Once)
-  await speakHindiUtterance(firstAnnouncement);
-
-  // 4. Check if user explicitly enabled 2x repetition in Settings (default: false / single sound)
-  const isDoubleRepeat = localStorage.getItem('pos_double_announcement') === 'true';
-  if (isDoubleRepeat) {
-    await new Promise(r => setTimeout(r, 2000));
-    await speakHindiUtterance(secondAnnouncement);
+  // Synthesize or retrieve ElevenLabs audio ONCE
+  let audioSource = order.audioDataUri || order.audioUrl || null;
+  if (!audioSource) {
+    audioSource = await requestElevenLabsSpeech(firstAnnouncement);
   }
+
+  if (audioSource) {
+    try {
+      const audio = new Audio(audioSource);
+      audio.preload = 'auto';
+
+      // 2. Announce complete order in Hindi (Pass 1)
+      await playAudioElement(audio);
+
+      // 3. Wait 2 seconds
+      await new Promise(r => setTimeout(r, 2000));
+
+      // 4. Repeat the complete order announcement (Pass 2 - Replay exact same audio buffer!)
+      audio.currentTime = 0;
+      await playAudioElement(audio);
+
+      // 5. Stop automatically
+      return;
+    } catch (err) {
+      console.warn('ElevenLabs audio playback failed, falling back to speech synthesis:', err);
+    }
+  }
+
+  // Fallback: Web Speech Synthesis (Repeats twice with 2-second pause)
+  await speakHindiUtterance(firstAnnouncement);
+  await new Promise(r => setTimeout(r, 2000));
+  await speakHindiUtterance(firstAnnouncement);
 }
 
 // Backward compatibility alias
@@ -489,7 +560,9 @@ async function processOrderAnnouncementQueue() {
  */
 function testVoiceAnnouncement() {
   initAudio();
-  window.speechSynthesis.cancel();
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
   orderAnnouncementQueue = []; // Clear queue to prevent stacked triggers
   isAnnouncing = false;
 
@@ -503,8 +576,7 @@ function testVoiceAnnouncement() {
     ]
   };
 
-  const isDouble = localStorage.getItem('pos_double_announcement') === 'true';
-  showToast(isDouble ? 'Playing Hindi Announcement (Repeats 2x)...' : 'Playing Hindi Voice Announcement (Single 1x)...', '🎙️');
+  showToast('Playing Indian Railway Announcement (ElevenLabs Hindi • Repeats 2x)...', '🎙️');
   orderAnnouncementQueue.push(sampleOrder);
   processOrderAnnouncementQueue();
 }
@@ -1643,6 +1715,14 @@ if (socket) {
 
       // Professional POS Voice Announcement
       announceNewOrder(newOrder);
+    }
+  });
+
+  socket.on('order_audio_ready', (data) => {
+    const target = orders.find(o => o.id === data.orderId);
+    if (target) {
+      target.audioUrl = data.audioUrl;
+      target.audioDataUri = data.audioDataUri;
     }
   });
 

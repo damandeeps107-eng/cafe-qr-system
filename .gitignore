@@ -2,3 +2,7 @@ node_modules/
 .DS_Store
 .env
 *.log
+public/audio/cache/*.mp3
+test_audio/
+*.mp3
+
