@@ -593,13 +593,16 @@
               </select>
             </div>
 
-            <!-- Double Repetition Mode -->
+            <!-- Announcement Repetition Mode -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #EAEAEA;">
               <div>
-                <div style="font-size: 14px; font-weight: 700; color: #171717;">Automatic Double Announcement</div>
-                <div style="font-size: 12px; color: #737373;">Announces order once, waits 2 seconds, and repeats completely</div>
+                <div style="font-size: 14px; font-weight: 700; color: #171717;">Announcement Repetition</div>
+                <div style="font-size: 12px; color: #737373;">Single sound (plays once) or double sound (repeats twice)</div>
               </div>
-              <span style="font-size: 12px; font-weight: 700; color: #16A36A; background: rgba(22, 163, 106, 0.1); padding: 4px 10px; border-radius: 12px;">✓ Enabled (2x Repeat)</span>
+              <select id="posRepetitionSelect" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #D4D4D4; font-size: 13px; font-weight: 600; background: #FAFAFA; cursor: pointer;">
+                <option value="false" selected>Single (1x - Plays Once)</option>
+                <option value="true">Double (2x - Repeats Twice)</option>
+              </select>
             </div>
 
             <!-- Speaking Speed (Cadence) -->

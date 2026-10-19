@@ -23,11 +23,24 @@ let manualOccupiedTables = new Set();
 let baseUrl = window.location.origin;
 
 // -----------------------------------------------------------------------------
-// 1. PROFESSIONAL INDIAN RAILWAY STYLE HINDI DOUBLE ANNOUNCEMENT ENGINE
+// 1. PROFESSIONAL HINDI VOICE ANNOUNCEMENT ENGINE (SINGLE VOICE GUARD)
 // -----------------------------------------------------------------------------
+const posAudioChannel = (typeof window !== 'undefined' && 'BroadcastChannel' in window) 
+  ? new BroadcastChannel('pos_order_voice_channel') 
+  : null;
+
 let orderAnnouncementQueue = [];
 let isAnnouncing = false;
 let announcedOrderIds = new Set(); // Tracks unique order IDs to prevent duplicates
+
+if (posAudioChannel) {
+  posAudioChannel.onmessage = (event) => {
+    if (event.data && event.data.type === 'ORDER_ANNOUNCED') {
+      announcedOrderIds.add(event.data.orderId);
+      orderAnnouncementQueue = orderAnnouncementQueue.filter(o => o.id !== event.data.orderId);
+    }
+  };
+}
 
 function initAudio() {
   if (!audioContext) {
@@ -365,7 +378,7 @@ function speakHindiUtterance(text) {
       utterance.lang = 'hi-IN';
     }
 
-    // Professional railway public announcement cadence: slightly slower than normal conversation (0.88x)
+    // Professional railway public announcement cadence (0.88x)
     const rate = parseFloat(localStorage.getItem('pos_voice_rate') || '0.88');
     const pitch = parseFloat(localStorage.getItem('pos_voice_pitch') || '1.0');
     const volume = parseFloat(localStorage.getItem('pos_voice_volume') || '1.0');
@@ -389,7 +402,7 @@ function speakHindiUtterance(text) {
       cleanup();
     };
 
-    // Chrome garbage-collection speech fix: keep speech synthesis alive on long utterances
+    // Chrome garbage-collection speech fix: keep speech synthesis alive
     heartbeatInterval = setInterval(() => {
       if (window.speechSynthesis.speaking) {
         window.speechSynthesis.pause();
@@ -405,37 +418,40 @@ function speakHindiUtterance(text) {
 }
 
 /**
- * AUTOMATIC DOUBLE ANNOUNCEMENT SEQUENCE:
- * 1. Play Ding-Dong notification chime
- * 2. Wait 0.5 seconds
- * 3. Start first Hindi voice announcement
- * 4. Wait 2 seconds after first announcement finishes
- * 5. Repeat complete announcement a second time
- * 6. Stop automatically after second announcement
+ * ORDER ANNOUNCEMENT ENGINE (Plays Once 1x by default, optional 2x repeat)
  */
-async function announceOrderWithDoubleRepetition(order) {
+async function announceOrder(order) {
   const { firstAnnouncement, secondAnnouncement } = buildRailwayHindiAnnouncements(order);
 
-  // Step 2: Play short, clear notification chime
+  // Inform any other open tabs on this computer so they do NOT announce the same order
+  if (posAudioChannel && order.id) {
+    try {
+      posAudioChannel.postMessage({ type: 'ORDER_ANNOUNCED', orderId: order.id });
+    } catch (e) {}
+  }
+
+  // 1. Play clear notification chime
   await playRailwayChime();
 
-  // Step 3: Wait 0.5 seconds
-  await new Promise(r => setTimeout(r, 500));
+  // 2. Short natural breath pause
+  await new Promise(r => setTimeout(r, 400));
 
-  // Step 4: First Hindi voice announcement
+  // 3. Clear Hindi voice announcement (Plays Once)
   await speakHindiUtterance(firstAnnouncement);
 
-  // Step 5: Wait 2 seconds after first announcement finishes
-  await new Promise(r => setTimeout(r, 2000));
-
-  // Step 6: Repeat complete announcement second time
-  await speakHindiUtterance(secondAnnouncement);
-
-  // Step 7: Stop automatically after second announcement
+  // 4. Check if user explicitly enabled 2x repetition in Settings (default: false / single sound)
+  const isDoubleRepeat = localStorage.getItem('pos_double_announcement') === 'true';
+  if (isDoubleRepeat) {
+    await new Promise(r => setTimeout(r, 2000));
+    await speakHindiUtterance(secondAnnouncement);
+  }
 }
 
+// Backward compatibility alias
+const announceOrderWithDoubleRepetition = announceOrder;
+
 /**
- * Sequential Order Announcement Queue (Zero Overlap, Guaranteed Double Repetition)
+ * Sequential Order Announcement Queue (Zero Overlap, Single Voice Guard)
  */
 function announceNewOrder(order) {
   if (!order || !order.id) return;
@@ -456,24 +472,27 @@ async function processOrderAnnouncementQueue() {
   const currentOrder = orderAnnouncementQueue.shift();
 
   try {
-    await announceOrderWithDoubleRepetition(currentOrder);
+    await announceOrder(currentOrder);
   } catch (err) {
-    console.error('Error during double order announcement:', err);
+    console.error('Error during order announcement:', err);
   } finally {
     isAnnouncing = false;
     // Sequential spacing before starting next order in queue
     if (orderAnnouncementQueue.length > 0) {
-      setTimeout(processOrderAnnouncementQueue, 800);
+      setTimeout(processOrderAnnouncementQueue, 600);
     }
   }
 }
 
 /**
- * Test Announcement matching the exact reference requirement:
- * Table 5: 2 Chilli Paneer, 1 Veg Burger, 1 Cold Coffee (Repeated Twice)
+ * Test Announcement: Table 5, 2 Chilli Paneer, 1 Veg Burger, 1 Cold Coffee
  */
 function testVoiceAnnouncement() {
   initAudio();
+  window.speechSynthesis.cancel();
+  orderAnnouncementQueue = []; // Clear queue to prevent stacked triggers
+  isAnnouncing = false;
+
   const sampleOrder = {
     id: `TEST-${Date.now()}`,
     tableNo: 5,
@@ -484,7 +503,8 @@ function testVoiceAnnouncement() {
     ]
   };
 
-  showToast('Playing Indian Railway Style Double Announcement...', '🎙️');
+  const isDouble = localStorage.getItem('pos_double_announcement') === 'true';
+  showToast(isDouble ? 'Playing Hindi Announcement (Repeats 2x)...' : 'Playing Hindi Voice Announcement (Single 1x)...', '🎙️');
   orderAnnouncementQueue.push(sampleOrder);
   processOrderAnnouncementQueue();
 }
@@ -1426,6 +1446,15 @@ document.addEventListener('DOMContentLoaded', () => {
     volumeRange.addEventListener('input', (e) => {
       localStorage.setItem('pos_voice_volume', e.target.value);
       if (volumeText) volumeText.innerText = `${Math.round(parseFloat(e.target.value) * 100)}%`;
+    });
+  }
+
+  const repetitionSelect = document.getElementById('posRepetitionSelect');
+  if (repetitionSelect) {
+    repetitionSelect.value = localStorage.getItem('pos_double_announcement') || 'false';
+    repetitionSelect.addEventListener('change', (e) => {
+      localStorage.setItem('pos_double_announcement', e.target.value);
+      showToast(e.target.value === 'true' ? 'Announcement: Double Repeat (2x)' : 'Announcement: Single (Plays Once)', '🔊');
     });
   }
 
