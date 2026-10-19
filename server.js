@@ -467,7 +467,7 @@ app.get('/api/qr/:tableNo', async (req, res) => {
     const tableNo = req.params.tableNo;
     const host = req.get('host');
     const protocol = req.protocol || 'http';
-    const orderUrl = `${protocol}://${host}/?table=${tableNo}`;
+    const orderUrl = `${protocol}://${host}/order?table=${tableNo}`;
 
     const qrDataUrl = await QRCode.toDataURL(orderUrl, {
       width: 400,
