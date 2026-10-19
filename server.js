@@ -49,6 +49,8 @@ const DATA_DIR = isVercel ? '/tmp' : path.join(__dirname, 'data');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const MENU_FILE = path.join(DATA_DIR, 'menu.json');
 
+const cors = require('cors');
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
