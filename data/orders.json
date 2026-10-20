@@ -1,5 +1,25 @@
 [
   {
+    "id": "ORD-380346",
+    "tableNo": 1,
+    "customerName": "Table 1 Guest",
+    "items": [
+      {
+        "id": "b1",
+        "name": "Crispy Paneer Burger",
+        "nameHindi": "क्रिस्पी पनीर बर्गर",
+        "price": 129,
+        "qty": 1
+      }
+    ],
+    "specialNote": "",
+    "totalAmount": 129,
+    "status": "pending",
+    "createdAt": "2026-10-19T08:26:20.346Z",
+    "speechText": "कृपया ध्यान दें! टेबल नंबर एक से नया ऑर्डर प्राप्त हुआ है। एक क्रिस्पी पनीर बर्गर।",
+    "speechTextRepeat": "दोबारा सूचित किया जाता है। टेबल नंबर एक से नया ऑर्डर प्राप्त हुआ है। एक क्रिस्पी पनीर बर्गर।"
+  },
+  {
     "id": "ORD-459996",
     "tableNo": 1,
     "customerName": "Table 1",

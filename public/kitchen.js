@@ -21,6 +21,7 @@ let availableVoices = [];
 let completedItemChecks = {}; // { [orderId_itemId]: boolean }
 let manualOccupiedTables = new Set();
 let baseUrl = window.location.origin;
+let deferredInstallPrompt = null; // PWA install prompt
 
 // -----------------------------------------------------------------------------
 // 1. PROFESSIONAL HINDI VOICE ANNOUNCEMENT ENGINE (SINGLE VOICE GUARD)
@@ -1906,6 +1907,59 @@ if (socket) {
 document.addEventListener('DOMContentLoaded', () => {
   initServerData();
   setupMobileQrModal();
+
+  // ── PWA Service Worker Registration ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => console.log('✅ Service Worker registered:', reg.scope))
+      .catch((err) => console.warn('SW registration failed:', err));
+  }
+
+  // ── PWA Install Prompt Handler ──
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    // Show the install button
+    const installBtn = document.getElementById('installPwaBtn');
+    if (installBtn) {
+      installBtn.style.display = 'inline-flex';
+      // Pulse animation to grab attention
+      installBtn.style.animation = 'pwaInstallPulse 2s ease-in-out 3';
+    }
+  });
+
+  // Install button click
+  document.getElementById('installPwaBtn')?.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) {
+      showToast('App already installed! Check your Desktop / Taskbar.', '✅');
+      return;
+    }
+    deferredInstallPrompt.prompt();
+    const result = await deferredInstallPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      showToast('🎉 PC App Install ho raha hai! Desktop icon check karo.', '💻');
+    } else {
+      showToast('Install cancel kiya — koi baat nahi, baad me kar sakte ho.', 'ℹ️');
+    }
+    deferredInstallPrompt = null;
+    const installBtn = document.getElementById('installPwaBtn');
+    if (installBtn) installBtn.style.display = 'none';
+  });
+
+  // Detect if already installed as PWA
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    const installBtn = document.getElementById('installPwaBtn');
+    if (installBtn) installBtn.style.display = 'none';
+    showToast('🎉 Royal Cafe POS Desktop App Install ho gaya!', '💻');
+  });
+
+  // If running in standalone mode (already installed), hide install button
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    const installBtn = document.getElementById('installPwaBtn');
+    if (installBtn) installBtn.style.display = 'none';
+  }
+
 
   // Navigation Items click
   const navBtns = document.querySelectorAll('.nav-item-btn');
